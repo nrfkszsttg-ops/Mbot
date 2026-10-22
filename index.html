@@ -1,0 +1,1109 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>mBot Mobile — Control Center</title>
+
+<style>
+:root {
+  color-scheme: dark;
+  --bg:#111827;
+  --panel:#1f2937;
+  --surface:#182231;
+  --border:#374151;
+  --text:#f3f4f6;
+  --muted:#9ca3af;
+  --blue:#3b82f6;
+  --green:#34d399;
+  --amber:#fbbf24;
+  --red:#f87171;
+}
+* { box-sizing:border-box; }
+html { background:var(--bg); }
+body {
+  margin:0;
+  min-height:100vh;
+  color:var(--text);
+  background:var(--bg);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-tap-highlight-color:transparent;
+}
+button { font:inherit; color:inherit; }
+button:focus-visible { outline:2px solid #93c5fd; outline-offset:3px; }
+button:disabled { opacity:.45; cursor:not-allowed; }
+.app {
+  width:100%;
+  max-width:600px;
+  margin:auto;
+  padding:calc(16px + env(safe-area-inset-top)) 14px
+          calc(24px + env(safe-area-inset-bottom));
+}
+header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+}
+.brand { display:flex; align-items:center; gap:11px; min-width:0; }
+.logo {
+  width:44px;height:44px;flex-shrink:0;
+  display:grid;place-items:center;
+  background:#29384c;border-radius:13px;font-size:23px;
+}
+h1 { font-size:20px; margin:0 0 3px; letter-spacing:-.4px; }
+.subtitle { margin:0;color:var(--muted);font-size:12px; }
+.status { display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted); }
+.dot { width:8px;height:8px;border-radius:50%;background:#6b7280;flex-shrink:0; }
+.dot.on { background:var(--green); }
+.dot.error { background:var(--red); }
+
+.panel {
+  padding:17px;
+  margin-bottom:13px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:17px;
+  min-width:0;
+}
+.heading {
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:10px;margin-bottom:15px;
+}
+h2 { margin:0 0 5px;font-size:16px;font-weight:650; }
+.desc { margin:0;color:var(--muted);font-size:12px;line-height:1.55; }
+.tag {
+  padding:5px 8px;border:1px solid var(--border);
+  border-radius:8px;color:#cbd5e1;font-size:10px;white-space:nowrap;
+}
+.btn {
+  min-height:44px;
+  padding:11px 13px;
+  border:1px solid var(--border);
+  border-radius:11px;
+  background:#293548;
+  font-size:13px;font-weight:600;
+  cursor:pointer;touch-action:manipulation;
+}
+.btn.primary { background:var(--blue);border-color:var(--blue); }
+.btn.danger { background:#42262d;border-color:#75404a; }
+.btn:active:not(:disabled),.action:active:not(:disabled) { transform:scale(.98); }
+.connect-row { display:flex;gap:8px; }
+.connect-row .btn { flex:1; }
+.note { margin-top:11px; }
+
+.distance {
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:18px;background:var(--surface);
+  border:1px solid #334155;border-radius:13px;
+}
+.distance-number { font-size:46px;font-weight:750;letter-spacing:-2px;line-height:1.1; }
+.unit { color:var(--muted);font-size:13px; }
+.measure-state { margin-top:8px;color:var(--muted);font-size:12px; }
+.distance-icon {
+  width:46px;height:46px;display:grid;place-items:center;
+  background:#29394e;border-radius:12px;font-size:22px;
+}
+
+.scene {
+  position:relative;width:100%;height:270px;
+  overflow:hidden;border:1px solid var(--border);
+  border-radius:13px;background:#141e2c;
+}
+.scene canvas { display:block;width:100%;height:100%; }
+.scene-overlay {
+  position:absolute;top:10px;left:10px;
+  display:flex;align-items:center;gap:7px;
+  padding:7px 9px;border:1px solid var(--border);
+  border-radius:8px;background:rgba(17,24,39,.9);
+  font-size:11px;color:#d1d5db;pointer-events:none;
+}
+.scene-dot { width:7px;height:7px;border-radius:50%;background:#64748b; }
+.scene-dot.active { background:var(--green); }
+.scene-dot.warning { background:var(--amber); }
+.legend { display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;color:var(--muted);font-size:11px; }
+.legend span { display:flex;align-items:center;gap:6px; }
+.legend i { width:9px;height:9px;border-radius:3px;display:inline-block; }
+.legend-robot { background:#60a5fa; }
+.legend-obstacle { background:#f59e0b; }
+.legend-grid { background:#64748b; }
+
+.joystick-wrap { display:grid;place-items:center;padding:8px 0 13px; }
+.joystick {
+  position:relative;width:min(76vw,310px);aspect-ratio:1;
+  border-radius:50%;border:1px solid #46546a;
+  background:radial-gradient(circle,#2a3749,#1b2636);
+  box-shadow:inset 0 0 0 12px rgba(0,0,0,.07);
+  overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;
+}
+.joystick:before,.joystick:after {
+  content:"";position:absolute;background:#3c4a5e;pointer-events:none;
+}
+.joystick:before { width:1px;height:74%;left:50%;top:13%; }
+.joystick:after { height:1px;width:74%;top:50%;left:13%; }
+.dir {
+  position:absolute;z-index:1;color:#a5b4c8;font-size:11px;
+  font-weight:700;pointer-events:none;
+}
+.up { top:12%;left:50%;transform:translateX(-50%); }
+.down { bottom:12%;left:50%;transform:translateX(-50%); }
+.left { left:11%;top:50%;transform:translateY(-50%); }
+.right { right:11%;top:50%;transform:translateY(-50%); }
+.stick {
+  position:absolute;z-index:2;width:76px;height:76px;left:50%;top:50%;
+  transform:translate(-50%,-50%);border-radius:50%;
+  background:#3b82f6;border:4px solid #91bfff;
+  box-shadow:0 5px 16px #0004;pointer-events:none;
+}
+.drive-status {
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px;background:var(--surface);border-radius:10px;
+  font-size:12px;margin-top:8px;
+}
+.drive-status strong { color:#93c5fd;text-align:right; }
+.stop { width:100%;min-height:50px;margin-top:12px;font-size:14px; }
+
+.actions { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px; }
+.action {
+  min-width:0;min-height:88px;padding:12px 5px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:13px;cursor:pointer;touch-action:manipulation;
+}
+.action-icon { font-size:23px; }
+.action-label { font-size:11px;font-weight:650;text-align:center; }
+
+.logs {
+  max-height:180px;overflow:auto;padding:10px;
+  background:#141d2a;border:1px solid #2d394a;border-radius:10px;
+  font:11px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;
+  overflow-wrap:anywhere;
+}
+.log { margin-bottom:4px;color:#d1d9e4; }
+.log.success { color:#6ee7b7; }
+.log.error { color:#fca5a5; }
+.log time { color:#8292a8;margin-right:7px; }
+.footer { text-align:center;color:var(--muted);font-size:11px;line-height:1.6;padding:8px 10px 0; }
+
+@media(max-width:360px) {
+  .app { padding-left:10px;padding-right:10px; }
+  .panel { padding:13px; }
+  .scene { height:230px; }
+  .action-label { font-size:10px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after { scroll-behavior:auto!important; }
+}
+</style>
+</head>
+
+<body>
+<main class="app">
+
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true">🤖</div>
+      <div>
+        <h1>mBot Mobile</h1>
+        <p class="subtitle">Robot Control Center</p>
+      </div>
+    </div>
+    <div class="status" role="status" aria-live="polite">
+      <span id="statusDot" class="dot"></span>
+      <span id="statusText">Déconnecté</span>
+    </div>
+  </header>
+
+  <!-- CONNEXION -->
+  <section class="panel">
+    <div class="heading">
+      <div>
+        <h2>Connexion Bluetooth</h2>
+        <p class="desc">Connecte un périphérique BLE UART compatible.</p>
+      </div>
+      <span class="tag">BLE</span>
+    </div>
+    <div class="connect-row">
+      <button id="connectBtn" class="btn primary">Connecter</button>
+      <button id="disconnectBtn" class="btn" disabled>Déconnecter</button>
+    </div>
+    <p id="compatibility" class="desc note">
+      Service FFE0 · Caractéristique FFE1
+    </p>
+  </section>
+
+  <!-- DISTANCE -->
+  <section class="panel">
+    <div class="heading">
+      <div>
+        <h2>Capteur ultrason</h2>
+        <p class="desc">Distance mesurée devant le robot.</p>
+      </div>
+      <span class="tag">PORT 1</span>
+    </div>
+    <div class="distance">
+      <div>
+        <span id="distanceValue" class="distance-number">--</span>
+        <span class="unit">cm</span>
+        <div id="distanceState" class="measure-state">En attente de mesure</div>
+      </div>
+      <div class="distance-icon" aria-hidden="true">↔</div>
+    </div>
+  </section>
+
+  <!-- VISUALISATION 3D -->
+  <section class="panel">
+    <div class="heading">
+      <div>
+        <h2>Visualisation 3D</h2>
+        <p class="desc">Représentation de la distance et de l'obstacle estimé.</p>
+      </div>
+      <span class="tag">ESPACE</span>
+    </div>
+    <div class="scene">
+      <canvas id="space3d" aria-label="Vue en perspective du robot et de l'obstacle"></canvas>
+      <div class="scene-overlay">
+        <span id="sceneDot" class="scene-dot"></span>
+        <span id="sceneStatus">En attente du capteur</span>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i class="legend-robot"></i> Robot</span>
+      <span><i class="legend-obstacle"></i> Obstacle estimé</span>
+      <span><i class="legend-grid"></i> Sol</span>
+    </div>
+    <p class="desc note">
+      La distance est mesurée par le capteur frontal. La forme et la largeur
+      de l'obstacle sont illustratives : cette vue ne constitue pas une
+      cartographie réelle de toute la pièce.
+    </p>
+  </section>
+
+  <!-- JOYSTICK -->
+  <section class="panel">
+    <div class="heading">
+      <div>
+        <h2>Joystick</h2>
+        <p class="desc">Glisse ton doigt pour diriger le robot. Relâche pour arrêter.</p>
+      </div>
+      <span class="tag">M1 / M2</span>
+    </div>
+    <div class="joystick-wrap">
+      <div id="joystick" class="joystick" aria-label="Joystick tactile de commande">
+        <span class="dir up">AVANT</span>
+        <span class="dir down">ARRIÈRE</span>
+        <span class="dir left">GAUCHE</span>
+        <span class="dir right">DROITE</span>
+        <div id="stick" class="stick"></div>
+      </div>
+    </div>
+    <div class="drive-status">
+      <span>Commande actuelle</span>
+      <strong id="driveLabel">À l'arrêt · S</strong>
+    </div>
+    <button id="stopBtn" class="btn danger stop" disabled>
+      ■ ARRÊT IMMÉDIAT
+    </button>
+  </section>
+
+  <!-- ACTIONS -->
+  <section class="panel">
+    <div class="heading">
+      <div>
+        <h2>Actions rapides</h2>
+        <p class="desc">Fonctions complémentaires du robot.</p>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="patrolBtn" class="action" disabled>
+        <span class="action-icon">↻</span>
+        <span class="action-label">Ronde continue</span>
+      </button>
+      <button id="buzzerBtn" class="action" disabled>
+        <span class="action-icon">♪</span>
+        <span class="action-label">Buzzer</span>
+      </button>
+      <button id="ledBtn" class="action" disabled>
+        <span class="action-icon">◉</span>
+        <span class="action-label">LED RVB</span>
+      </button>
+    </div>
+    <p class="desc note">
+      La ronde se poursuit sans limite de temps. Appuie sur STOP ou utilise
+      le joystick pour quitter le mode autonome. L'évitement dépend du capteur
+      et du programme chargé sur le mBot.
+    </p>
+  </section>
+
+  <!-- ÉTAT DU SYSTÈME -->
+  <section class="panel">
+    <div class="heading">
+      <div>
+        <h2>État du système</h2>
+        <p class="desc">Connexion et réception des données.</p>
+      </div>
+    </div>
+    <div class="drive-status">
+      <span>Bluetooth</span>
+      <strong id="bluetoothState">Inactif</strong>
+    </div>
+    <div class="drive-status">
+      <span>Télémétrie</span>
+      <strong id="telemetryState">En attente</strong>
+    </div>
+    <div class="drive-status">
+      <span>Mode</span>
+      <strong id="modeState">Manuel</strong>
+    </div>
+  </section>
+
+  <!-- JOURNAL -->
+  <section class="panel">
+    <div class="heading">
+      <div>
+        <h2>Journal</h2>
+        <p class="desc">Commandes et événements Bluetooth.</p>
+      </div>
+      <button id="clearLogsBtn" class="btn">Effacer</button>
+    </div>
+    <div id="logs" class="logs" role="log" aria-live="polite"></div>
+  </section>
+
+  <footer class="footer">
+    mBot Mobile · Interface tactile<br>
+    Teste le robot roues levées avant les premiers déplacements.
+  </footer>
+
+</main>
+
+<script>
+"use strict";
+
+/* ==========================================================
+   CONFIGURATION
+   ========================================================== */
+
+const UART_SERVICE_UUID = "0000ffe0-0000-1000-8000-00805f9b34fb";
+const UART_CHARACTERISTIC_UUID = "0000ffe1-0000-1000-8000-00805f9b34fb";
+
+const COMMAND = {
+  FORWARD: "A",
+  REVERSE: "R",
+  LEFT: "G",
+  RIGHT: "D",
+  STOP: "S",
+  PATROL: "X",
+  BUZZER: "B",
+  LEDS: "L"
+};
+
+const $ = id => document.getElementById(id);
+
+const ui = {
+  connect: $("connectBtn"),
+  disconnect: $("disconnectBtn"),
+  statusDot: $("statusDot"),
+  statusText: $("statusText"),
+  compatibility: $("compatibility"),
+  distance: $("distanceValue"),
+  distanceState: $("distanceState"),
+  telemetryState: $("telemetryState"),
+  bluetoothState: $("bluetoothState"),
+  modeState: $("modeState"),
+  driveLabel: $("driveLabel"),
+  joystick: $("joystick"),
+  stick: $("stick"),
+  stop: $("stopBtn"),
+  patrol: $("patrolBtn"),
+  buzzer: $("buzzerBtn"),
+  leds: $("ledBtn"),
+  logs: $("logs"),
+  canvas: $("space3d"),
+  sceneStatus: $("sceneStatus"),
+  sceneDot: $("sceneDot")
+};
+
+/* ==========================================================
+   ÉTAT
+   ========================================================== */
+
+let bleDevice = null;
+let bleServer = null;
+let uartCharacteristic = null;
+
+let connected = false;
+let disconnecting = false;
+let activePointerId = null;
+let joystickActive = false;
+let lastCommand = null;
+let currentMode = "Manuel";
+let receiveBuffer = "";
+
+let measuredDistance = null;
+let lastMeasurementTime = 0;
+
+let commandQueue = Promise.resolve();
+
+/* ==========================================================
+   JOURNAL
+   ========================================================== */
+
+function addLog(message, type = "") {
+  const row = document.createElement("div");
+  row.className = "log " + type;
+
+  const time = document.createElement("time");
+  time.textContent = new Date().toLocaleTimeString("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+
+  row.append(time, document.createTextNode(message));
+  ui.logs.appendChild(row);
+
+  while (ui.logs.children.length > 100) {
+    ui.logs.removeChild(ui.logs.firstChild);
+  }
+
+  ui.logs.scrollTop = ui.logs.scrollHeight;
+}
+
+$("clearLogsBtn").addEventListener("click", () => {
+  ui.logs.replaceChildren();
+  addLog("Journal effacé.");
+});
+
+/* ==========================================================
+   INTERFACE
+   ========================================================== */
+
+const commandLabels = {
+  A: "Avancer · A",
+  R: "Reculer · R",
+  G: "Tourner à gauche · G",
+  D: "Tourner à droite · D",
+  S: "À l'arrêt · S",
+  X: "Ronde continue · X"
+};
+
+function setConnectionUI(value) {
+  connected = value;
+
+  ui.statusDot.classList.toggle("on", value);
+  ui.statusDot.classList.remove("error");
+  ui.statusText.textContent = value ? "Connecté" : "Déconnecté";
+  ui.bluetoothState.textContent = value ? "Connecté" : "Inactif";
+
+  ui.connect.disabled = value;
+  ui.disconnect.disabled = !value;
+  ui.stop.disabled = !value;
+  ui.patrol.disabled = !value;
+  ui.buzzer.disabled = !value;
+  ui.leds.disabled = !value;
+
+  if (!value) {
+    ui.telemetryState.textContent = "En attente";
+  }
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  ui.modeState.textContent = mode;
+}
+
+function setDrive(command) {
+  ui.driveLabel.textContent = commandLabels[command] || command;
+}
+
+/* ==========================================================
+   COMMANDES BLUETOOTH
+   ========================================================== */
+
+// La file conserve l'ordre des écritures BLE.
+// Cela évite que des commandes de déplacement successives
+// se chevauchent lorsque le joystick est déplacé rapidement.
+
+function sendCommand(command, options = {}) {
+  const force = options.force === true;
+  const shouldLog = options.log !== false;
+
+  if (!connected || !uartCharacteristic) {
+    if (shouldLog) addLog("Robot non connecté.", "error");
+    return Promise.resolve(false);
+  }
+
+  if (!force && command === lastCommand) {
+    return Promise.resolve(true);
+  }
+
+  const operation = async () => {
+    if (!connected || !uartCharacteristic) return false;
+
+    const characteristic = uartCharacteristic;
+
+    try {
+      const bytes = new TextEncoder().encode(command);
+
+      if (characteristic.properties.write) {
+        await characteristic.writeValueWithResponse(bytes);
+      } else if (characteristic.properties.writeWithoutResponse) {
+        await characteristic.writeValueWithoutResponse(bytes);
+      } else {
+        throw new Error("La caractéristique BLE ne permet pas l'écriture.");
+      }
+
+      lastCommand = command;
+
+      if (commandLabels[command]) setDrive(command);
+
+      if (command === COMMAND.STOP) {
+        setMode("Manuel");
+      } else if (command === COMMAND.PATROL) {
+        setMode("Ronde continue");
+      } else if (["A", "R", "G", "D"].includes(command)) {
+        setMode("Manuel");
+      }
+
+      if (shouldLog) {
+        addLog("Commande envoyée : " + command, "success");
+      }
+
+      return true;
+    } catch (error) {
+      addLog("Erreur d'envoi : " + error.message, "error");
+      return false;
+    }
+  };
+
+  const result = commandQueue.then(operation, operation);
+  commandQueue = result.then(() => undefined, () => undefined);
+  return result;
+}
+
+async function stopRobot() {
+  joystickActive = false;
+  activePointerId = null;
+  resetStick();
+
+  if (connected) {
+    return sendCommand(COMMAND.STOP, { force: true });
+  }
+
+  setDrive(COMMAND.STOP);
+  setMode("Manuel");
+  return false;
+}
+
+/* ==========================================================
+   CONNEXION BLE
+   ========================================================== */
+
+async function connectRobot() {
+  if (!("bluetooth" in navigator)) {
+    ui.statusDot.classList.add("error");
+    ui.statusText.textContent = "BLE indisponible";
+
+    ui.compatibility.textContent =
+      "Web Bluetooth n'est pas disponible ici. Safari sur iPhone ne " +
+      "prend pas en charge cette API pour cette connexion. Utilise un " +
+      "appareil compatible ou une solution BLE native.";
+
+    addLog("Web Bluetooth indisponible dans ce navigateur.", "error");
+    return;
+  }
+
+  ui.connect.disabled = true;
+  addLog("Recherche d'un périphérique BLE UART...");
+
+  try {
+    bleDevice = await navigator.bluetooth.requestDevice({
+      filters: [{ services: [UART_SERVICE_UUID] }],
+      optionalServices: [UART_SERVICE_UUID]
+    });
+
+    bleDevice.addEventListener(
+      "gattserverdisconnected",
+      handleDisconnection
+    );
+
+    bleServer = await bleDevice.gatt.connect();
+
+    const service = await bleServer.getPrimaryService(UART_SERVICE_UUID);
+
+    uartCharacteristic = await service.getCharacteristic(
+      UART_CHARACTERISTIC_UUID
+    );
+
+    if (!uartCharacteristic.properties.notify) {
+      throw new Error(
+        "FFE1 ne permet pas les notifications nécessaires à la télémétrie."
+      );
+    }
+
+    await uartCharacteristic.startNotifications();
+    uartCharacteristic.addEventListener(
+      "characteristicvaluechanged",
+      handleTelemetry
+    );
+
+    receiveBuffer = "";
+    lastCommand = null;
+    setConnectionUI(true);
+
+    addLog(
+      "Connexion établie : " + (bleDevice.name || "périphérique BLE"),
+      "success"
+    );
+
+    // Demande un arrêt initial une fois la connexion établie.
+    await sendCommand(COMMAND.STOP, { force: true });
+
+  } catch (error) {
+    addLog("Connexion impossible : " + error.message, "error");
+
+    if (bleDevice?.gatt?.connected) {
+      bleDevice.gatt.disconnect();
+    } else {
+      cleanupConnection();
+    }
+
+    ui.connect.disabled = false;
+  }
+}
+
+function cleanupConnection() {
+  connected = false;
+  joystickActive = false;
+  activePointerId = null;
+
+  resetStick();
+  setConnectionUI(false);
+  setDrive(COMMAND.STOP);
+  setMode("Manuel");
+
+  uartCharacteristic = null;
+  bleServer = null;
+  bleDevice = null;
+  lastCommand = null;
+  receiveBuffer = "";
+
+  updateSceneStatus();
+}
+
+function handleDisconnection() {
+  cleanupConnection();
+  addLog("Connexion Bluetooth perdue.", "error");
+}
+
+async function disconnectRobot() {
+  if (disconnecting) return;
+  disconnecting = true;
+
+  try {
+    // Demande l'arrêt tant que la liaison fonctionne.
+    if (connected) {
+      await stopRobot();
+    }
+
+    if (bleDevice?.gatt?.connected) {
+      bleDevice.gatt.disconnect();
+    } else {
+      cleanupConnection();
+    }
+  } finally {
+    disconnecting = false;
+  }
+}
+
+ui.connect.addEventListener("click", connectRobot);
+ui.disconnect.addEventListener("click", disconnectRobot);
+
+/* ==========================================================
+   TÉLÉMÉTRIE : DIST:XX\n
+   ========================================================== */
+
+function handleTelemetry(event) {
+  const value = event.target.value;
+  const bytes = new Uint8Array(
+    value.buffer,
+    value.byteOffset,
+    value.byteLength
+  );
+
+  receiveBuffer += new TextDecoder().decode(bytes);
+
+  if (receiveBuffer.length > 2048) {
+    receiveBuffer = receiveBuffer.slice(-512);
+  }
+
+  const lines = receiveBuffer.split(/\r?\n/);
+  receiveBuffer = lines.pop() || "";
+
+  for (const line of lines) {
+    processTelemetryLine(line.trim());
+  }
+}
+
+function processTelemetryLine(line) {
+  if (!line) return;
+
+  const match = line.match(/^DIST:(\d+(?:\.\d+)?)$/);
+
+  if (!match) {
+    addLog("Donnée reçue : " + line);
+    return;
+  }
+
+  const distance = Number(match[1]);
+
+  if (!Number.isFinite(distance) || distance < 0) return;
+
+  measuredDistance = distance;
+  lastMeasurementTime = Date.now();
+
+  ui.distance.textContent = String(distance);
+  ui.distanceState.textContent =
+    distance < 20 ? "Obstacle proche" : "Mesure reçue";
+
+  ui.telemetryState.textContent = "Active";
+  drawScene();
+}
+
+/* ==========================================================
+   VISUALISATION 3D EN PERSPECTIVE
+   ========================================================== */
+
+const ctx = ui.canvas.getContext("2d");
+
+function resizeScene() {
+  const rect = ui.canvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  ui.canvas.width = Math.round(rect.width * dpr);
+  ui.canvas.height = Math.round(rect.height * dpr);
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawScene();
+}
+
+// Projection en perspective : x = largeur, y = profondeur,
+// z = hauteur. Il s'agit d'une représentation graphique estimée.
+function project3D(x, y, z, width, height) {
+  const horizon = height * 0.25;
+  const focal = width * 0.85;
+  const depth = Math.max(0.6, y + 3);
+
+  return {
+    x: width / 2 + x * focal / depth,
+    y: horizon + (1.1 - z) * focal / depth
+  };
+}
+
+function polygon(points, fill, stroke = null) {
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+
+  for (let i = 1; i < points.length; i++) {
+    ctx.lineTo(points[i].x, points[i].y);
+  }
+
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+
+  if (stroke) {
+    ctx.strokeStyle = stroke;
+    ctx.stroke();
+  }
+}
+
+function drawScene() {
+  if (!ctx) return;
+
+  const width = ui.canvas.clientWidth;
+  const height = ui.canvas.clientHeight;
+
+  if (!width || !height) return;
+
+  ctx.clearRect(0, 0, width, height);
+
+  const bg = ctx.createLinearGradient(0, 0, 0, height);
+  bg.addColorStop(0, "#172334");
+  bg.addColorStop(1, "#111827");
+
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, width, height);
+
+  // Horizon.
+  ctx.strokeStyle = "#334155";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, height * 0.25);
+  ctx.lineTo(width, height * 0.25);
+  ctx.stroke();
+
+  // Sol en perspective.
+  ctx.strokeStyle = "rgba(100,116,139,.42)";
+
+  for (let x = -8; x <= 8; x += 1.5) {
+    const near = project3D(x, 0, -1.1, width, height);
+    const far = project3D(x, 30, -1.1, width, height);
+
+    ctx.beginPath();
+    ctx.moveTo(near.x, near.y);
+    ctx.lineTo(far.x, far.y);
+    ctx.stroke();
+  }
+
+  for (let y = 0; y <= 30; y += 2) {
+    const left = project3D(-10, y, -1.1, width, height);
+    const right = project3D(10, y, -1.1, width, height);
+
+    ctx.beginPath();
+    ctx.moveTo(left.x, left.y);
+    ctx.lineTo(right.x, right.y);
+    ctx.stroke();
+  }
+
+  const hasMeasurement =
+    measuredDistance !== null && Number.isFinite(measuredDistance);
+
+  const maxVisualRangeCm = 200;
+  const distance = hasMeasurement
+    ? Math.min(measuredDistance, maxVisualRangeCm)
+    : null;
+
+  // Faisceau indicatif : il ne représente pas la largeur réellement
+  // mesurée par le capteur.
+  const nearLeft = project3D(-0.25, 0.8, -0.2, width, height);
+  const nearRight = project3D(0.25, 0.8, -0.2, width, height);
+  const farLeft = project3D(-1.1, 20, -0.8, width, height);
+  const farRight = project3D(1.1, 20, -0.8, width, height);
+
+  polygon(
+    [nearLeft, farLeft, farRight, nearRight],
+    "rgba(96,165,250,.08)"
+  );
+
+  // Obstacle illustratif à la profondeur mesurée.
+  if (hasMeasurement && distance > 0 && distance < maxVisualRangeCm) {
+    const depth = Math.max(0.5, distance / 10);
+    const warning = distance < 20;
+
+    const p1 = project3D(-0.65, depth, -0.75, width, height);
+    const p2 = project3D(0.65, depth, -0.75, width, height);
+    const p3 = project3D(0.65, depth, 0.65, width, height);
+    const p4 = project3D(-0.65, depth, 0.65, width, height);
+
+    const front = warning ? "#f59e0b" : "#64748b";
+    const side = warning ? "#b45309" : "#475569";
+    const edge = warning ? "#fbbf24" : "#94a3b8";
+
+    // Face avant.
+    polygon([p1, p2, p3, p4], front, edge);
+
+    // Face latérale.
+    const offset = Math.max(2, Math.min(12, 15 / depth));
+    polygon([
+      p2,
+      { x:p2.x + offset, y:p2.y - offset * .5 },
+      { x:p3.x + offset, y:p3.y - offset * .5 },
+      p3
+    ], side, edge);
+
+    ctx.fillStyle = "#f3f4f6";
+    ctx.font = "600 12px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText(
+      measuredDistance + " cm",
+      (p1.x + p2.x) / 2,
+      Math.min(p1.y, p2.y) - 10
+    );
+  }
+
+  // Robot stylisé au premier plan.
+  const robot = project3D(0, 0, -0.85, width, height);
+  const rw = Math.min(54, width * .18);
+  const rh = 22;
+
+  ctx.fillStyle = "#3b82f6";
+  ctx.fillRect(robot.x - rw/2, robot.y - rh/2, rw, rh);
+  ctx.strokeStyle = "#93c5fd";
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(robot.x - rw/2, robot.y - rh/2, rw, rh);
+
+  // Flèche indiquant l'avant.
+  polygon([
+    { x:robot.x, y:robot.y - rh/2 - 8 },
+    { x:robot.x - 6, y:robot.y - rh/2 },
+    { x:robot.x + 6, y:robot.y - rh/2 }
+  ], "#dbeafe");
+
+  updateSceneStatus();
+}
+
+function updateSceneStatus() {
+  const fresh =
+    lastMeasurementTime > 0 &&
+    Date.now() - lastMeasurementTime < 2500;
+
+  if (!connected || measuredDistance === null) {
+    ui.sceneStatus.textContent = "En attente du capteur";
+    ui.sceneDot.className = "scene-dot";
+  } else if (!fresh) {
+    ui.sceneStatus.textContent = "Mesure ancienne";
+    ui.sceneDot.className = "scene-dot";
+  } else if (measuredDistance < 20) {
+    ui.sceneStatus.textContent =
+      "Obstacle proche · " + measuredDistance + " cm";
+    ui.sceneDot.className = "scene-dot warning";
+  } else {
+    ui.sceneStatus.textContent =
+      "Distance : " + measuredDistance + " cm";
+    ui.sceneDot.className = "scene-dot active";
+  }
+}
+
+/* ==========================================================
+   JOYSTICK TACTILE
+   ========================================================== */
+
+const STICK_RADIUS = 38;
+const DEAD_ZONE = 0.25;
+
+function resetStick() {
+  ui.stick.style.left = "50%";
+  ui.stick.style.top = "50%";
+}
+
+function getJoystickCommand(event) {
+  const rect = ui.joystick.getBoundingClientRect();
+
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+
+  let dx = event.clientX - centerX;
+  let dy = event.clientY - centerY;
+
+  const maxRadius = rect.width / 2 - STICK_RADIUS - 8;
+  const length = Math.hypot(dx, dy);
+
+  if (length > maxRadius) {
+    const factor = maxRadius / length;
+    dx *= factor;
+    dy *= factor;
+  }
+
+  ui.stick.style.left = (50 + dx / rect.width * 100) + "%";
+  ui.stick.style.top = (50 + dy / rect.height * 100) + "%";
+
+  const nx = dx / maxRadius;
+  const ny = dy / maxRadius;
+
+  if (Math.hypot(nx, ny) < DEAD_ZONE) return COMMAND.STOP;
+
+  if (Math.abs(nx) > Math.abs(ny)) {
+    return nx < 0 ? COMMAND.LEFT : COMMAND.RIGHT;
+  }
+
+  return ny < 0 ? COMMAND.FORWARD : COMMAND.REVERSE;
+}
+
+ui.joystick.addEventListener("pointerdown", event => {
+  if (!connected || joystickActive) return;
+
+  event.preventDefault();
+  joystickActive = true;
+  activePointerId = event.pointerId;
+
+  ui.joystick.setPointerCapture(event.pointerId);
+  sendCommand(getJoystickCommand(event));
+});
+
+ui.joystick.addEventListener("pointermove", event => {
+  if (!joystickActive || event.pointerId !== activePointerId) return;
+
+  event.preventDefault();
+  sendCommand(getJoystickCommand(event));
+});
+
+function releaseJoystick(event) {
+  if (!joystickActive) return;
+  if (event && event.pointerId !== activePointerId) return;
+
+  // stopRobot désactive l'état du joystick et envoie S.
+  stopRobot();
+}
+
+ui.joystick.addEventListener("pointerup", releaseJoystick);
+ui.joystick.addEventListener("pointercancel", releaseJoystick);
+
+ui.joystick.addEventListener("lostpointercapture", () => {
+  if (joystickActive) releaseJoystick();
+});
+
+/* ==========================================================
+   ACTIONS RAPIDES
+   ========================================================== */
+
+ui.stop.addEventListener("click", () => {
+  stopRobot();
+});
+
+ui.patrol.addEventListener("click", async () => {
+  joystickActive = false;
+  activePointerId = null;
+  resetStick();
+
+  // X démarre la ronde autonome sans limite de temps.
+  await sendCommand(COMMAND.PATROL, { force: true });
+});
+
+ui.buzzer.addEventListener("click", () => {
+  sendCommand(COMMAND.BUZZER, { force: true });
+});
+
+ui.leds.addEventListener("click", () => {
+  sendCommand(COMMAND.LEDS, { force: true });
+});
+
+/* ==========================================================
+   ARRÊT À LA PERTE DE FOCUS
+   ========================================================== */
+
+window.addEventListener("blur", () => {
+  if (joystickActive) releaseJoystick();
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && joystickActive) releaseJoystick();
+});
+
+/* ==========================================================
+   INITIALISATION
+   ========================================================== */
+
+setConnectionUI(false);
+resetStick();
+resizeScene();
+
+window.addEventListener("resize", resizeScene);
+
+if (!("bluetooth" in navigator)) {
+  ui.compatibility.textContent =
+    "Web Bluetooth n'est pas disponible dans ce navigateur. " +
+    "Safari sur iPhone nécessite une autre solution de communication BLE.";
+}
+
+addLog("Interface mobile initialisée.");
+addLog("Connecte un périphérique BLE UART compatible.");
+
+</script>
+</body>
+</html>
