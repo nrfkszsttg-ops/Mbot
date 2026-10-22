@@ -1,0 +1,725 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0b1020">
+<title>mBot Mobile — Control Center</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg:#080c16;
+  --panel:#111827;
+  --panel2:#182235;
+  --line:#29364c;
+  --text:#f2f6ff;
+  --muted:#9aa9c0;
+  --blue:#55a8ff;
+  --green:#37d99a;
+  --red:#ff6377;
+  --orange:#ffbd69;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+header {
+  padding:22px 18px 16px;
+  background:linear-gradient(135deg,#142542,#0b1020 75%);
+  border-bottom:1px solid var(--line);
+}
+.eyebrow {
+  color:var(--blue);
+  font-size:11px;
+  letter-spacing:2px;
+  font-weight:800;
+}
+h1 { font-size:25px; margin:7px 0; }
+.subtitle { color:var(--muted); font-size:13px; }
+main {
+  max-width:650px;
+  margin:auto;
+  padding:14px;
+  display:grid;
+  gap:13px;
+}
+.card {
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:17px;
+  padding:16px;
+}
+.card h2 { font-size:16px; margin:0 0 13px; }
+.row { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+.row > * { flex:1; }
+button, select {
+  font:inherit;
+  border-radius:11px;
+  border:1px solid var(--line);
+  padding:12px;
+  background:var(--panel2);
+  color:var(--text);
+  min-height:45px;
+}
+button { font-weight:700; cursor:pointer; }
+button:disabled { opacity:.45; cursor:not-allowed; }
+.primary { background:var(--blue); color:#071322; border-color:var(--blue); }
+.danger { background:#3a1723; border-color:#743044; color:#ff9cab; }
+.success { color:var(--green); }
+.muted { color:var(--muted); }
+.status {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin-bottom:13px;
+  font-size:13px;
+}
+.dot {
+  width:10px; height:10px; border-radius:50%;
+  background:#64748b; flex-shrink:0;
+}
+.dot.connected { background:var(--green); box-shadow:0 0 12px #37d99a66; }
+.dot.error { background:var(--red); }
+.small { font-size:12px; color:var(--muted); line-height:1.55; }
+#joystick {
+  position:relative;
+  width:min(76vw,280px);
+  height:min(76vw,280px);
+  max-width:280px;
+  max-height:280px;
+  margin:8px auto 15px;
+  border-radius:50%;
+  border:2px solid #344762;
+  background:
+    linear-gradient(90deg,transparent 49.5%,#344762 49.5%,#344762 50.5%,transparent 50.5%),
+    linear-gradient(transparent 49.5%,#344762 49.5%,#344762 50.5%,transparent 50.5%),
+    radial-gradient(circle,#1c2a40,#0d1422);
+  touch-action:none;
+  user-select:none;
+}
+#stick {
+  position:absolute;
+  width:70px;
+  height:70px;
+  left:calc(50% - 35px);
+  top:calc(50% - 35px);
+  border-radius:50%;
+  background:linear-gradient(145deg,#76bdff,#2878dc);
+  border:3px solid #b8dcff;
+  box-shadow:0 5px 20px #0008;
+  pointer-events:none;
+}
+.joy-label {
+  position:absolute;
+  color:#9aacc6;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1px;
+}
+.up { top:12px; left:50%; transform:translateX(-50%); }
+.down { bottom:12px; left:50%; transform:translateX(-50%); }
+.left { left:10px; top:50%; transform:translateY(-50%); }
+.right { right:10px; top:50%; transform:translateY(-50%); }
+.readout {
+  text-align:center;
+  color:var(--muted);
+  font-size:12px;
+  margin-bottom:12px;
+}
+.bigstop { width:100%; min-height:54px; font-size:16px; }
+input[type="range"] { width:100%; accent-color:var(--blue); }
+.range-label {
+  display:flex; justify-content:space-between;
+  color:var(--muted); font-size:12px; margin:12px 0 6px;
+}
+#log {
+  background:#070b13;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px;
+  min-height:95px;
+  max-height:210px;
+  overflow:auto;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  font:11px/1.6 ui-monospace,SFMono-Regular,monospace;
+  color:#b8c8df;
+}
+footer {
+  text-align:center;
+  padding:8px 20px 28px;
+  font-size:11px;
+  color:var(--muted);
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">ROBOTICS • BLUETOOTH</div>
+  <h1>mBot Mobile</h1>
+  <div class="subtitle">Control Center · iPhone · Beacio</div>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Connexion du robot</h2>
+    <div class="status">
+      <span id="statusDot" class="dot"></span>
+      <span id="statusText">Non connecté</span>
+    </div>
+    <div class="row">
+      <button id="connectBtn" class="primary">Rechercher mon mBot</button>
+      <button id="disconnectBtn" disabled>Déconnecter</button>
+    </div>
+    <p class="small" style="margin-bottom:0">
+      Allume le robot et active Beacio avant de lancer la recherche.
+      Sélectionne <b>mBot</b> dans la fenêtre Bluetooth.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>Conduite</h2>
+    <div id="joystick">
+      <span class="joy-label up">AVANT</span>
+      <span class="joy-label down">ARRIÈRE</span>
+      <span class="joy-label left">GAUCHE</span>
+      <span class="joy-label right">DROITE</span>
+      <div id="stick"></div>
+    </div>
+    <div class="readout" id="driveReadout">Moteurs à l’arrêt</div>
+    <button id="stopBtn" class="danger bigstop">■ ARRÊT IMMÉDIAT</button>
+    <div class="range-label">
+      <span>Vitesse maximale</span>
+      <span id="speedValue">60 %</span>
+    </div>
+    <input id="speed" type="range" min="15" max="100" value="60">
+    <p class="small">Garde le doigt sur le joystick pour avancer. Relâche-le pour arrêter le robot.</p>
+  </section>
+
+  <section class="card">
+    <h2>Éclairage RGB</h2>
+    <div class="row">
+      <button data-color="red">Rouge</button>
+      <button data-color="green">Vert</button>
+      <button data-color="blue">Bleu</button>
+    </div>
+    <div class="row" style="margin-top:9px">
+      <button data-color="white">Blanc</button>
+      <button data-color="off">Éteindre</button>
+    </div>
+    <p class="small">Les effets lumineux dépendent du firmware et du module LED du robot.</p>
+  </section>
+
+  <section class="card">
+    <h2>Commandes supplémentaires</h2>
+    <div class="row">
+      <button id="beepBtn">Tester le buzzer</button>
+      <button id="sensorBtn">Lire le capteur</button>
+    </div>
+    <div id="sensorValue" class="small" style="margin-top:12px">Capteur ultrason : aucune lecture.</div>
+  </section>
+
+  <section class="card">
+    <div class="row" style="margin-bottom:12px">
+      <h2 style="margin:0">Diagnostic</h2>
+      <button id="clearLog" style="flex:0 0 auto;min-height:35px;padding:7px 10px">Effacer</button>
+    </div>
+    <div id="log">En attente de connexion…</div>
+  </section>
+</main>
+
+<footer>
+  Commandes envoyées au robot par Bluetooth · Utilise le robot sur une surface dégagée.
+</footer>
+
+<script>
+(() => {
+  "use strict";
+
+  // Profil BLE courant du mBot/mCore.
+  const UUID = {
+    service: "0000ffe1-0000-1000-8000-00805f9b34fb",
+    tx:      "0000ffe3-0000-1000-8000-00805f9b34fb",
+    rx:      "0000ffe2-0000-1000-8000-00805f9b34fb"
+  };
+
+  // Identifiants de périphériques du protocole Makeblock.
+  const DEVICE = {
+    JOYSTICK: 5,
+    RGB_LED: 8,
+    ULTRASONIC: 1,
+    TONE: 34
+  };
+
+  const $ = id => document.getElementById(id);
+
+  let device = null;
+  let server = null;
+  let service = null;
+  let tx = null;
+  let rx = null;
+  let connected = false;
+  let commandIndex = 0;
+  let queue = Promise.resolve();
+  let joystickActive = false;
+  let sensorPending = false;
+  let responseBuffer = [];
+  let pendingSensorTimeout = null;
+  let lastDrive = "";
+  let lastDriveTime = 0;
+
+  function log(message, type = "info") {
+    const time = new Date().toLocaleTimeString();
+    const prefix = type === "error" ? "ERREUR" :
+                   type === "ok" ? "OK" : "INFO";
+    $("log").textContent += `\n[${time}] ${prefix} · ${message}`;
+    $("log").scrollTop = $("log").scrollHeight;
+  }
+
+  function setStatus(message, state = "idle") {
+    $("statusText").textContent = message;
+    $("statusDot").className =
+      "dot" + (state === "connected" ? " connected" :
+               state === "error" ? " error" : "");
+  }
+
+  function updateButtons() {
+    $("connectBtn").disabled = connected;
+    $("disconnectBtn").disabled = !connected;
+  }
+
+  function hex(bytes) {
+    return Array.from(bytes)
+      .map(v => v.toString(16).padStart(2, "0"))
+      .join(" ");
+  }
+
+  function signed16(value) {
+    const n = Math.max(-255, Math.min(255, Math.round(value)));
+    return n < 0 ? n + 65536 : n;
+  }
+
+  function int16LE(value) {
+    const n = signed16(value);
+    return [n & 0xff, (n >> 8) & 0xff];
+  }
+
+  // Trame Makeblock : FF 55, longueur, index, action, appareil,
+  // port, puis paramètres.
+  function makePacket(deviceId, port, params = [], action = 2) {
+    commandIndex = (commandIndex + 1) & 0xff;
+    const payload = [
+      commandIndex,
+      action,
+      deviceId,
+      port,
+      ...params
+    ];
+    return new Uint8Array([0xff, 0x55, payload.length, ...payload]);
+  }
+
+  function sendBytes(bytes, description = "Commande") {
+    if (!connected || !tx) {
+      log(`${description} ignorée : robot non connecté.`, "error");
+      return Promise.resolve(false);
+    }
+
+    // La file est récupérable même si une commande échoue.
+    queue = queue.catch(() => {}).then(async () => {
+      if (!connected || !tx) return false;
+
+      try {
+        if (typeof tx.writeValueWithResponse === "function") {
+          await tx.writeValueWithResponse(bytes);
+        } else if (typeof tx.writeValueWithoutResponse === "function") {
+          await tx.writeValueWithoutResponse(bytes);
+        } else if (typeof tx.writeValue === "function") {
+          await tx.writeValue(bytes);
+        } else {
+          throw new Error("Cette caractéristique ne permet pas l’écriture.");
+        }
+        log(`${description} envoyée : ${hex(bytes)}`, "ok");
+        return true;
+      } catch (error) {
+        log(`${description} : ${error.message || error}`, "error");
+        return false;
+      }
+    });
+
+    return queue;
+  }
+
+  async function sendDevice(deviceId, port, params, description) {
+    const packet = makePacket(deviceId, port, params);
+    return sendBytes(packet, description);
+  }
+
+  // Commande de déplacement : moteur gauche et moteur droit.
+  async function drive(left, right, force = false) {
+    if (!connected) return;
+
+    const key = `${left},${right}`;
+    const now = Date.now();
+
+    // Limite les écritures répétées identiques.
+    if (!force && key === lastDrive && now - lastDriveTime < 120) return;
+
+    lastDrive = key;
+    lastDriveTime = now;
+
+    const params = [...int16LE(left), ...int16LE(right)];
+    await sendDevice(DEVICE.JOYSTICK, 0, params, "Moteurs");
+  }
+
+  async function stopRobot() {
+    joystickActive = false;
+    resetStick();
+    $("driveReadout").textContent = "Moteurs à l’arrêt";
+    lastDrive = "";
+    if (connected) await drive(0, 0, true);
+  }
+
+  function resetStick() {
+    $("stick").style.left = "calc(50% - 35px)";
+    $("stick").style.top = "calc(50% - 35px)";
+  }
+
+  function resetConnection() {
+    connected = false;
+    joystickActive = false;
+    tx = null;
+    rx = null;
+    service = null;
+    server = null;
+    device = null;
+    sensorPending = false;
+    if (pendingSensorTimeout) {
+      clearTimeout(pendingSensorTimeout);
+      pendingSensorTimeout = null;
+    }
+    resetStick();
+    $("driveReadout").textContent = "Moteurs à l’arrêt";
+    updateButtons();
+    setStatus("Non connecté");
+  }
+
+  function onDisconnected() {
+    log("La liaison Bluetooth a été interrompue.", "error");
+    resetConnection();
+  }
+
+  async function connectRobot() {
+    if (!navigator.bluetooth) {
+      setStatus("Bluetooth indisponible", "error");
+      log(
+        "navigator.bluetooth absent. Ouvre ce site dans Safari avec Beacio activé, " +
+        "ou vérifie que le navigateur/polyfill prend en charge Web Bluetooth.",
+        "error"
+      );
+      return;
+    }
+
+    $("connectBtn").disabled = true;
+    setStatus("Recherche du mBot…");
+    log("Ouverture du sélecteur Bluetooth…");
+
+    try {
+      // On conserve le nom qui fonctionnait dans le sélecteur précédent.
+      const picked = await navigator.bluetooth.requestDevice({
+        filters: [{ name: "mBot" }],
+        optionalServices: [UUID.service]
+      });
+
+      device = picked;
+      device.addEventListener("gattserverdisconnected", onDisconnected);
+
+      log(`Robot sélectionné : ${device.name || "nom non communiqué"}`);
+      setStatus("Connexion au robot…");
+
+      if (!device.gatt) {
+        throw new Error(
+          "Le périphérique sélectionné ne fournit pas de connexion GATT."
+        );
+      }
+
+      server = await device.gatt.connect();
+      log("Connexion GATT établie.");
+
+      try {
+        service = await server.getPrimaryService(UUID.service);
+      } catch (error) {
+        const services = await server.getPrimaryServices().catch(() => []);
+        const found = services.map(s => s.uuid).join(", ") || "aucun service listé";
+        throw new Error(
+          `Service FFE1 introuvable. Services détectés : ${found}. ` +
+          `Détail : ${error.message || error}`
+        );
+      }
+
+      log(`Service trouvé : ${service.uuid}`);
+
+      try {
+        tx = await service.getCharacteristic(UUID.tx);
+      } catch (error) {
+        throw new Error(
+          `Caractéristique d’envoi FFE3 introuvable : ${error.message || error}`
+        );
+      }
+
+      log(`Caractéristique d’envoi : ${tx.uuid}`);
+
+      try {
+        rx = await service.getCharacteristic(UUID.rx);
+        if (typeof rx.startNotifications === "function") {
+          await rx.startNotifications();
+          rx.addEventListener("characteristicvaluechanged", onData);
+          log("Réception FFE2 activée.");
+        } else {
+          log("FFE2 trouvée, mais notifications non disponibles.");
+        }
+      } catch (error) {
+        rx = null;
+        log(`Réception FFE2 indisponible : ${error.message || error}`);
+        log("Les commandes d’envoi peuvent quand même être testées.");
+      }
+
+      connected = true;
+      updateButtons();
+      setStatus(`Connecté à ${device.name || "mBot"}`, "connected");
+      log("Connexion prête. Teste d’abord le bouton ARRÊT.", "ok");
+
+    } catch (error) {
+      log(`Connexion impossible : ${error.message || error}`, "error");
+
+      // Nettoie proprement une connexion partielle.
+      try {
+        if (device && device.gatt && device.gatt.connected) {
+          device.gatt.disconnect();
+        }
+      } catch (_) {}
+
+      resetConnection();
+      setStatus("Échec de connexion", "error");
+      $("connectBtn").disabled = false;
+    }
+  }
+
+  function onData(event) {
+    const value = event.target.value;
+    const bytes = [];
+
+    for (let i = 0; i < value.byteLength; i++) {
+      bytes.push(value.getUint8(i));
+    }
+
+    responseBuffer.push(...bytes);
+    if (responseBuffer.length > 512) responseBuffer = responseBuffer.slice(-512);
+    log(`Données reçues : ${hex(bytes)}`);
+
+    // Le protocole renvoie généralement une trame FF 55 contenant
+    // un index, un type de valeur, puis la valeur du capteur.
+    // On conserve la trame brute plutôt que d'inventer une mesure.
+    const headerIndex = responseBuffer.findIndex(
+      (b, i) => b === 0xff && responseBuffer[i + 1] === 0x55
+    );
+
+    if (headerIndex >= 0 && responseBuffer.length >= headerIndex + 4) {
+      const frame = responseBuffer.slice(headerIndex);
+      $("sensorValue").textContent =
+        `Réponse du robot reçue : ${hex(frame)}`;
+      sensorPending = false;
+
+      if (pendingSensorTimeout) {
+        clearTimeout(pendingSensorTimeout);
+        pendingSensorTimeout = null;
+      }
+
+      responseBuffer = [];
+    }
+  }
+
+  // Joystick tactile : le mouvement est relatif au centre.
+  const joystick = $("joystick");
+  const stick = $("stick");
+
+  function moveJoystick(event) {
+    if (!joystickActive || !connected) return;
+
+    const rect = joystick.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const maxRadius = rect.width * 0.32;
+
+    let dx = event.clientX - cx;
+    let dy = event.clientY - cy;
+    const distance = Math.hypot(dx, dy);
+
+    if (distance > maxRadius) {
+      dx = dx / distance * maxRadius;
+      dy = dy / distance * maxRadius;
+    }
+
+    stick.style.left = `calc(50% - 35px + ${dx}px)`;
+    stick.style.top = `calc(50% - 35px + ${dy}px)`;
+
+    const maxSpeed = Number($("speed").value) * 2.55;
+    const forward = -dy / maxRadius * maxSpeed;
+    const turn = dx / maxRadius * maxSpeed;
+
+    let left = Math.round(forward + turn);
+    let right = Math.round(forward - turn);
+
+    const peak = Math.max(Math.abs(left), Math.abs(right), 255);
+    left = Math.round(left * 255 / peak);
+    right = Math.round(right * 255 / peak);
+
+    $("driveReadout").textContent =
+      `Moteur gauche : ${left} · moteur droit : ${right}`;
+
+    drive(left, right);
+  }
+
+  joystick.addEventListener("pointerdown", event => {
+    if (!connected) {
+      log("Connecte d’abord le robot.", "error");
+      return;
+    }
+    joystickActive = true;
+    joystick.setPointerCapture(event.pointerId);
+    moveJoystick(event);
+  });
+
+  joystick.addEventListener("pointermove", moveJoystick);
+
+  function releaseJoystick() {
+    if (!joystickActive) return;
+    joystickActive = false;
+    stopRobot();
+  }
+
+  joystick.addEventListener("pointerup", releaseJoystick);
+  joystick.addEventListener("pointercancel", releaseJoystick);
+  joystick.addEventListener("lostpointercapture", releaseJoystick);
+
+  $("speed").addEventListener("input", () => {
+    $("speedValue").textContent = `${$("speed").value} %`;
+  });
+
+  $("connectBtn").addEventListener("click", connectRobot);
+
+  $("disconnectBtn").addEventListener("click", async () => {
+    await stopRobot();
+    try {
+      if (device && device.gatt && device.gatt.connected) {
+        device.gatt.disconnect();
+      }
+    } catch (error) {
+      log(`Déconnexion : ${error.message || error}`, "error");
+    }
+    resetConnection();
+    log("Déconnecté.");
+  });
+
+  $("stopBtn").addEventListener("click", stopRobot);
+
+  // LEDs RGB. La commande est envoyée en protocole Makeblock.
+  const colors = {
+    red: [255, 0, 0],
+    green: [0, 255, 0],
+    blue: [0, 0, 255],
+    white: [255, 255, 255],
+    off: [0, 0, 0]
+  };
+
+  document.querySelectorAll("[data-color]").forEach(button => {
+    button.addEventListener("click", async () => {
+      const color = colors[button.dataset.color];
+      if (!connected) {
+        log("Connecte le robot avant de commander les LEDs.", "error");
+        return;
+      }
+
+      // Appareil LED : port 7, emplacement LED 2, puis RGB.
+      await sendDevice(
+        DEVICE.RGB_LED,
+        7,
+        [2, ...color],
+        `LED ${button.dataset.color}`
+      );
+    });
+  });
+
+  $("beepBtn").addEventListener("click", async () => {
+    if (!connected) {
+      log("Connecte le robot avant de tester le buzzer.", "error");
+      return;
+    }
+
+    // Commande TONE : fréquence 523 Hz et durée 200 ms.
+    const frequency = 523;
+    const duration = 200;
+    await sendDevice(
+      DEVICE.TONE,
+      0,
+      [
+        frequency & 0xff, (frequency >> 8) & 0xff,
+        duration & 0xff, (duration >> 8) & 0xff
+      ],
+      "Buzzer"
+    );
+  });
+
+  $("sensorBtn").addEventListener("click", async () => {
+    if (!connected) {
+      log("Connecte le robot avant de lire le capteur.", "error");
+      return;
+    }
+
+    if (!rx) {
+      $("sensorValue").textContent =
+        "La réception Bluetooth n’est pas disponible (FFE2).";
+      log("Lecture du capteur impossible sans canal de réception.", "error");
+      return;
+    }
+
+    sensorPending = true;
+    responseBuffer = [];
+    $("sensorValue").textContent = "Demande envoyée, attente de la réponse…";
+
+    // Action GET (1), capteur ultrason, port 4.
+    const packet = makePacket(DEVICE.ULTRASONIC, 4, [1], 1);
+    await sendBytes(packet, "Lecture du capteur ultrason");
+
+    if (pendingSensorTimeout) clearTimeout(pendingSensorTimeout);
+    pendingSensorTimeout = setTimeout(() => {
+      if (sensorPending) {
+        sensorPending = false;
+        $("sensorValue").textContent =
+          "Aucune réponse décodée. Consulte le diagnostic ci-dessous.";
+        log("Délai dépassé pour la réponse du capteur.", "error");
+      }
+    }, 3000);
+  });
+
+  $("clearLog").addEventListener("click", () => {
+    $("log").textContent = "Journal effacé.";
+  });
+
+  window.addEventListener("pagehide", () => {
+    try {
+      if (device && device.gatt && device.gatt.connected) {
+        device.gatt.disconnect();
+      }
+    } catch (_) {}
+  });
+
+  updateButtons();
+  log("Site prêt. Vérifie Beacio puis appuie sur Rechercher mon mBot.");
+})();
+</script>
+</body>
+</html>
