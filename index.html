@@ -1,0 +1,652 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1018">
+<title>mBot Mobile — Control Center</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1018;--panel:#131c29;--line:#29384c;--text:#f2f6fc;--muted:#91a1b6;--blue:#56a8ff;--green:#4de0a2;--red:#ff6577}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#172b43,transparent 45%),var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header,main,footer{width:min(100%,760px);margin:auto;padding:15px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:max(20px,env(safe-area-inset-top))}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:46px;height:46px;border-radius:14px;background:linear-gradient(145deg,#56a8ff,#3265db);display:grid;place-items:center;font-size:25px}
+h1{font-size:19px;margin:0}
+.sub,.muted{color:var(--muted)}
+.sub{font-size:12px;margin-top:4px}
+.pill{border:1px solid var(--line);border-radius:99px;padding:8px 10px;font-size:12px}
+.pill.on{color:var(--green);border-color:#27674f}
+main{display:grid;gap:14px}
+.panel{border:1px solid var(--line);background:rgba(19,28,41,.95);border-radius:19px;padding:16px}
+.heading{font-weight:750;font-size:14px;margin-bottom:13px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+button{font:inherit;font-weight:700;color:var(--text);background:#182435;border:1px solid var(--line);border-radius:13px;min-height:47px;padding:11px;touch-action:manipulation}
+button:disabled{opacity:.45}
+button.primary{background:var(--blue);color:#07111e;border:0}
+button.danger{background:#3a1b27;color:#ffb4be;border-color:#713141}
+button.good{background:#12372f;color:#8bf0c7}
+button:active{transform:scale(.98)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.wide{width:100%}
+.status{padding:12px;background:#0b1420;border:1px solid var(--line);border-radius:12px;font-size:13px;line-height:1.5;overflow-wrap:anywhere;margin-top:12px}
+.status.error{color:#ffb2bc;border-color:#8c3948}
+.status.ok{color:#8bf0c7;border-color:#27674f}
+.small{font-size:12px;line-height:1.6}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.metric{padding:11px 8px;background:#0e1723;border:1px solid var(--line);border-radius:12px;min-width:0}
+.value{font-weight:800;font-size:18px;overflow-wrap:anywhere}
+.label{font-size:11px;color:var(--muted);margin-top:5px}
+#scene{display:block;width:100%;height:150px;border-radius:12px;background:#0a111a}
+.joystick-area{display:grid;place-items:center;padding:7px 0 14px}
+#joy{width:min(76vw,270px);height:min(76vw,270px);max-width:270px;max-height:270px;position:relative;border:1px solid #344a63;border-radius:50%;background:linear-gradient(90deg,transparent 49.5%,#29394b 49.5%,#29394b 50.5%,transparent 50.5%),linear-gradient(transparent 49.5%,#29394b 49.5%,#29394b 50.5%,transparent 50.5%),radial-gradient(circle,#17283b,#0c1420 72%);touch-action:none;user-select:none}
+#stick{position:absolute;width:72px;height:72px;left:calc(50% - 36px);top:calc(50% - 36px);border-radius:50%;background:linear-gradient(145deg,#78bdff,#357fe1);border:2px solid #a8d5ff;pointer-events:none}
+.jlabel{position:absolute;color:#91a1b6;font-size:10px;font-weight:700;pointer-events:none}
+.up{top:12px;left:50%;transform:translateX(-50%)}
+.down{bottom:12px;left:50%;transform:translateX(-50%)}
+.left{left:12px;top:50%;transform:translateY(-50%)}
+.right{right:12px;top:50%;transform:translateY(-50%)}
+#log{max-height:220px;overflow:auto;background:#09111b;border-radius:12px;padding:10px;font:11px/1.6 ui-monospace,monospace;overflow-wrap:anywhere}
+.entry{border-bottom:1px solid #1c2938;padding:3px 0}
+footer{padding-bottom:max(25px,env(safe-area-inset-bottom))}
+@media(min-width:600px){.twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">◉</div>
+    <div><h1>mBot Mobile</h1><div class="sub">CONTROL CENTER · MAKEBLOCK BLE</div></div>
+  </div>
+  <span id="badge" class="pill">Déconnecté</span>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="heading">Connexion Bluetooth <span class="muted">BLE</span></div>
+    <div class="grid">
+      <button id="connect" class="primary">Connecter le mBot</button>
+      <button id="disconnect" disabled>Déconnecter</button>
+    </div>
+    <div id="status" class="status">Prêt. Allume le robot puis connecte-le.</div>
+    <p class="muted small">Le site recherche tous les appareils BLE visibles. Il attend ensuite le service FFE1, l'écriture FFE3 et les notifications FFE2.</p>
+  </section>
+
+  <section class="panel">
+    <div class="heading">État du robot</div>
+    <div class="metrics">
+      <div class="metric"><div id="distance" class="value">—</div><div class="label">Distance (cm)</div></div>
+      <div class="metric"><div id="devname" class="value">—</div><div class="label">Appareil</div></div>
+      <div class="metric"><div id="link" class="value">OFF</div><div class="label">Bluetooth</div></div>
+    </div>
+    <p id="sensorStatus" class="muted small">Capteurs en attente.</p>
+  </section>
+
+  <section class="panel">
+    <div class="heading">Vue du robot <span class="muted">Illustration</span></div>
+    <canvas id="scene"></canvas>
+    <p class="muted small">Vue décorative, sans cartographie réelle.</p>
+  </section>
+
+  <section class="panel">
+    <div class="heading">Pilotage manuel <span class="muted">Maintenir pour conduire</span></div>
+    <div class="joystick-area">
+      <div id="joy" aria-label="Joystick">
+        <span class="jlabel up">AVANT</span><span class="jlabel down">ARRIÈRE</span>
+        <span class="jlabel left">GAUCHE</span><span class="jlabel right">DROITE</span>
+        <div id="stick"></div>
+      </div>
+    </div>
+    <button id="stop" class="danger wide">■ ARRÊT</button>
+    <p class="muted small">Teste avec les roues soulevées du sol. L'arrêt nécessite une liaison active.</p>
+  </section>
+
+  <section class="panel">
+    <div class="heading">Commandes rapides</div>
+    <div class="grid">
+      <button id="patrol">↻ Patrouille</button>
+      <button id="buzzer">♫ Buzzer</button>
+      <button id="led">● Changer la LED</button>
+      <button id="diag">Diagnostic BLE</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="heading">Journal <button id="clear" style="min-height:34px;padding:6px 10px">Effacer</button></div>
+    <div id="log" aria-live="polite"></div>
+  </section>
+</main>
+
+<footer class="muted small">mBot Mobile · Protocole Makeblock expérimental.</footer>
+
+<script>
+"use strict";
+
+/*
+ * Profil BLE mBot mCore :
+ * Service FFE1
+ * Écriture FFE3
+ * Notifications FFE2
+ *
+ * Trames : FF 55 longueur ID action appareil paramètres...
+ * RUN = 2 ; GET = 1
+ */
+
+const UUID = {
+  service: "0000ffe1-0000-1000-8000-00805f9b34fb",
+  tx:      "0000ffe3-0000-1000-8000-00805f9b34fb",
+  rx:      "0000ffe2-0000-1000-8000-00805f9b34fb"
+};
+
+const RUN = 2;
+const GET = 1;
+const DEV = { JOYSTICK: 5, RGBLED: 8, TONE: 34, ULTRA: 1 };
+const PORT = { LED: 7, ULTRA: 4 };
+const LED_SLOT = 2;
+
+let device = null;
+let server = null;
+let service = null;
+let tx = null;
+let rx = null;
+let sequence = 0;
+let queue = Promise.resolve();
+let inputBuffer = [];
+let pending = new Map();
+let connected = false;
+let direction = "";
+let pointerId = null;
+let patrolTimer = null;
+let patrolStep = 0;
+let ledStep = 0;
+let sensorTimer = null;
+
+// Sur le mBot, les moteurs sont montés en sens opposés.
+const INVERT_LEFT = true;
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+function log(message, type = "") {
+  const item = document.createElement("div");
+  item.className = "entry";
+  item.textContent = new Date().toLocaleTimeString("fr-FR") + " " + message;
+  if (type === "error") item.style.color = "#ff9aa8";
+  if (type === "ok") item.style.color = "#8bf0c7";
+  $("log").prepend(item);
+}
+
+function status(message, type = "") {
+  $("status").textContent = message;
+  $("status").className = "status" + (type ? " " + type : "");
+  log(message, type);
+}
+
+function setUI(isConnected) {
+  connected = isConnected;
+  $("badge").textContent = isConnected ? "Connecté" : "Déconnecté";
+  $("badge").className = "pill" + (isConnected ? " on" : "");
+  $("connect").disabled = isConnected;
+  $("disconnect").disabled = !isConnected;
+  $("link").textContent = isConnected ? "ON" : "OFF";
+  $("devname").textContent = isConnected ? (device?.name || "BLE") : "—";
+}
+
+function makeFrame(action, target, params = []) {
+  const id = (sequence = (sequence + 1) & 0x7f);
+  const body = [id, action, target, ...params];
+  return { id, bytes: new Uint8Array([0xff, 0x55, body.length, ...body]) };
+}
+
+function int16(value) {
+  const n = Math.max(-32768, Math.min(32767, Math.round(value)));
+  return [n & 255, (n >> 8) & 255];
+}
+
+function sendBytes(bytes) {
+  queue = queue.then(async () => {
+    if (!tx || !device?.gatt?.connected) {
+      throw new Error("Robot non connecté");
+    }
+    if (tx.properties.writeWithoutResponse) {
+      await tx.writeValueWithoutResponse(bytes);
+    } else if (tx.properties.write) {
+      await tx.writeValueWithResponse(bytes);
+    } else {
+      throw new Error("La caractéristique FFE3 ne permet pas l'écriture");
+    }
+    await sleep(18);
+  });
+  return queue;
+}
+
+function sendRun(target, params) {
+  return sendBytes(makeFrame(RUN, target, params).bytes);
+}
+
+function drive(left, right) {
+  const l = INVERT_LEFT ? -left : left;
+  return sendRun(DEV.JOYSTICK, [...int16(l), ...int16(right)]);
+}
+
+function stopMovement() {
+  stopPatrol();
+  direction = "";
+  resetStick();
+  if (connected) {
+    drive(0, 0).then(() => log("Arrêt envoyé", "ok"))
+      .catch(e => status("Échec de l'arrêt : " + e.message, "error"));
+  } else {
+    log("Arrêt demandé, mais robot non connecté.", "error");
+  }
+}
+
+function rgb(r, g, b) {
+  return sendRun(DEV.RGBLED, [PORT.LED, LED_SLOT, 0, r, g, b]);
+}
+
+function tone(frequency, duration) {
+  return sendRun(DEV.TONE, [...int16(frequency), ...int16(duration)]);
+}
+
+/* Demande de lecture d'un capteur Makeblock. */
+function ask(target, port, timeout = 900) {
+  if (!connected || !rx) return Promise.resolve(null);
+
+  const frame = makeFrame(GET, target, [port]);
+  return new Promise(resolve => {
+    const timer = setTimeout(() => {
+      pending.delete(frame.id);
+      resolve(null);
+    }, timeout);
+
+    pending.set(frame.id, value => {
+      clearTimeout(timer);
+      pending.delete(frame.id);
+      resolve(value);
+    });
+
+    sendBytes(frame.bytes).catch(error => {
+      clearTimeout(timer);
+      pending.delete(frame.id);
+      log("Lecture capteur impossible : " + error.message, "error");
+      resolve(null);
+    });
+  });
+}
+
+function onNotification(event) {
+  const data = event.target.value;
+  for (let i = 0; i < data.byteLength; i++) {
+    inputBuffer.push(data.getUint8(i));
+  }
+  if (inputBuffer.length > 1024) inputBuffer = inputBuffer.slice(-512);
+
+  while (inputBuffer.length >= 4) {
+    while (inputBuffer.length >= 2 &&
+      !(inputBuffer[0] === 0xff && inputBuffer[1] === 0x55)) {
+      inputBuffer.shift();
+    }
+
+    if (inputBuffer.length < 4) return;
+
+    // Accusé de réception : FF 55 0D 0A
+    if (inputBuffer[2] === 0x0d && inputBuffer[3] === 0x0a) {
+      inputBuffer.splice(0, 4);
+      continue;
+    }
+
+    const id = inputBuffer[2];
+    const type = inputBuffer[3];
+    let payloadLength;
+
+    if (type === 1) payloadLength = 1;
+    else if (type === 2) payloadLength = 4;
+    else if (type === 3) payloadLength = 2;
+    else if (type === 4) {
+      if (inputBuffer.length < 5) return;
+      payloadLength = 1 + inputBuffer[4];
+    } else {
+      inputBuffer.shift();
+      continue;
+    }
+
+    const totalLength = 4 + payloadLength + 2;
+    if (inputBuffer.length < totalLength) return;
+
+    const payload = inputBuffer.slice(4, 4 + payloadLength);
+    const raw = new Uint8Array(payload);
+    const view = new DataView(raw.buffer);
+    let value = null;
+
+    if (type === 1) value = raw[0];
+    if (type === 2) value = view.getFloat32(0, true);
+    if (type === 3) value = view.getInt16(0, true);
+    if (type === 4) value = String.fromCharCode(...raw.slice(1));
+
+    inputBuffer.splice(0, totalLength);
+    const callback = pending.get(id);
+    if (callback) callback(value);
+  }
+}
+
+async function connectRobot() {
+  if (!navigator.bluetooth ||
+      typeof navigator.bluetooth.requestDevice !== "function") {
+    status("Bluetooth Web indisponible. Vérifie Beacio et ses autorisations dans Safari.", "error");
+    return;
+  }
+
+  $("connect").disabled = true;
+
+  try {
+    status("1/4 — Recherche du mBot…");
+
+    // Le nom du périphérique est mBot : on ne filtre pas les services
+    // au moment de la sélection.
+    device = await navigator.bluetooth.requestDevice({
+      filters: [{ name: "mBot" }],
+      optionalServices: [UUID.service]
+    });
+
+    log("Appareil sélectionné : " + (device.name || "nom inconnu"), "ok");
+
+    if (!device.gatt) {
+      throw new Error("Cet appareil ne propose pas de connexion GATT.");
+    }
+
+    device.addEventListener("gattserverdisconnected", onDisconnect);
+
+    status("2/4 — Connexion au périphérique…");
+    server = await device.gatt.connect();
+
+    status("3/4 — Recherche du service FFE1…");
+    service = await server.getPrimaryService(UUID.service);
+
+    status("4/4 — Recherche des caractéristiques…");
+    tx = await service.getCharacteristic(UUID.tx);
+
+    try {
+      rx = await service.getCharacteristic(UUID.rx);
+      await rx.startNotifications();
+      rx.addEventListener("characteristicvaluechanged", onNotification);
+      log("Réception FFE2 activée.", "ok");
+    } catch (error) {
+      rx = null;
+      log("FFE2 indisponible : les capteurs ne seront pas lus. " + error.message);
+    }
+
+    if (!tx.properties.write && !tx.properties.writeWithoutResponse) {
+      throw new Error("FFE3 existe mais ne permet pas d'envoyer des commandes.");
+    }
+
+    setUI(true);
+    status("Connecté au service Makeblock. Teste les commandes à faible vitesse.", "ok");
+    $("sensorStatus").textContent = rx
+      ? "Réception BLE activée. Lecture du capteur ultrason en cours."
+      : "Connexion active, mais réception des capteurs indisponible.";
+
+    await rgb(0, 30, 0).catch(() => {});
+    startSensorPolling();
+
+  } catch (error) {
+    console.error("Erreur BLE mBot :", error);
+    const message = error.name === "NotFoundError"
+      ? "Sélection annulée ou appareil non trouvé."
+      : error.message || error.name || "Erreur inconnue";
+
+    status("ÉCHEC — " + message, "error");
+
+    if (device?.gatt?.connected) {
+      try { device.gatt.disconnect(); } catch (_) {}
+    }
+    cleanup(false);
+  } finally {
+    $("connect").disabled = connected;
+  }
+}
+
+function startSensorPolling() {
+  clearInterval(sensorTimer);
+  if (!rx) return;
+
+  sensorTimer = setInterval(async () => {
+    if (!connected || !rx) return;
+    const result = await ask(DEV.ULTRA, PORT.ULTRA, 700);
+    if (result !== null && Number.isFinite(Number(result))) {
+      $("distance").textContent = Math.round(Number(result));
+      $("sensorStatus").textContent = "Données reçues du capteur.";
+    }
+  }, 1500);
+}
+
+function stopPatrol() {
+  if (patrolTimer) clearInterval(patrolTimer);
+  patrolTimer = null;
+  patrolStep = 0;
+  $("patrol").textContent = "↻ Patrouille";
+}
+
+function cleanup(updateStatus = true) {
+  clearInterval(sensorTimer);
+  stopPatrol();
+  tx = null;
+  rx = null;
+  service = null;
+  server = null;
+  inputBuffer = [];
+  pending.forEach(callback => callback(null));
+  pending.clear();
+  setUI(false);
+  $("distance").textContent = "—";
+  $("sensorStatus").textContent = "Capteurs en attente.";
+  if (updateStatus) status("Déconnecté.");
+}
+
+function onDisconnect() {
+  log("Périphérique Bluetooth déconnecté.", "error");
+  cleanup(false);
+  status("Connexion interrompue. Reconnecte le mBot.", "error");
+}
+
+function disconnectRobot() {
+  if (connected) {
+    drive(0, 0).catch(() => {});
+  }
+  if (device?.gatt?.connected) {
+    try { device.gatt.disconnect(); } catch (_) {}
+  }
+  cleanup();
+}
+
+function resetStick() {
+  $("stick").style.left = "calc(50% - 36px)";
+  $("stick").style.top = "calc(50% - 36px)";
+}
+
+function directionFrom(dx, dy) {
+  if (Math.abs(dx) < .28 && Math.abs(dy) < .28) return "";
+  if (Math.abs(dy) >= Math.abs(dx)) return dy < 0 ? "forward" : "reverse";
+  return dx < 0 ? "left" : "right";
+}
+
+function applyDirection(next) {
+  if (!connected || next === direction) return;
+  direction = next;
+
+  const speed = 90;
+  const commands = {
+    forward: [speed, speed],
+    reverse: [-speed, -speed],
+    left: [-speed, speed],
+    right: [speed, -speed],
+    "": [0, 0]
+  };
+
+  const values = commands[next] || [0, 0];
+  drive(values[0], values[1]).catch(e =>
+    status("Erreur de commande : " + e.message, "error")
+  );
+}
+
+function moveJoystick(event) {
+  if (pointerId !== event.pointerId) return;
+
+  const rect = $("joy").getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const limit = rect.width * .31;
+
+  let px = event.clientX - cx;
+  let py = event.clientY - cy;
+  const length = Math.hypot(px, py);
+
+  if (length > limit) {
+    px = px / length * limit;
+    py = py / length * limit;
+  }
+
+  $("stick").style.left = `calc(50% - 36px + ${px}px)`;
+  $("stick").style.top = `calc(50% - 36px + ${py}px)`;
+
+  applyDirection(directionFrom(px / limit, py / limit));
+}
+
+function endJoystick(event) {
+  if (pointerId !== event.pointerId) return;
+  pointerId = null;
+  direction = "";
+  resetStick();
+  if (connected) {
+    drive(0, 0).catch(e => log("Arrêt : " + e.message, "error"));
+  }
+}
+
+$("joy").addEventListener("pointerdown", event => {
+  if (!connected) {
+    status("Connecte le mBot avant de le piloter.", "error");
+    return;
+  }
+  pointerId = event.pointerId;
+  $("joy").setPointerCapture(event.pointerId);
+  moveJoystick(event);
+});
+$("joy").addEventListener("pointermove", moveJoystick);
+$("joy").addEventListener("pointerup", endJoystick);
+$("joy").addEventListener("pointercancel", endJoystick);
+$("joy").addEventListener("lostpointercapture", () => {
+  if (pointerId !== null) {
+    pointerId = null;
+    direction = "";
+    resetStick();
+    if (connected) drive(0, 0).catch(() => {});
+  }
+});
+
+$("connect").addEventListener("click", connectRobot);
+$("disconnect").addEventListener("click", disconnectRobot);
+$("stop").addEventListener("click", stopMovement);
+
+$("buzzer").addEventListener("click", () => {
+  if (!connected) return status("Connecte le robot d'abord.", "error");
+  tone(880, 180).catch(e => status("Buzzer : " + e.message, "error"));
+});
+
+$("led").addEventListener("click", () => {
+  if (!connected) return status("Connecte le robot d'abord.", "error");
+  const colors = [[0,0,255],[0,255,0],[255,0,0],[0,0,0]];
+  const c = colors[ledStep++ % colors.length];
+  rgb(...c).catch(e => status("LED : " + e.message, "error"));
+});
+
+$("patrol").addEventListener("click", () => {
+  if (!connected) return status("Connecte le robot d'abord.", "error");
+  if (patrolTimer) {
+    stopPatrol();
+    drive(0, 0).catch(() => {});
+    status("Patrouille arrêtée.");
+    return;
+  }
+
+  // Petite séquence locale : avancer puis tourner, en boucle.
+  // Surveille le robot pendant ce mode.
+  const steps = [
+    { left: 70, right: 70, duration: 900 },
+    { left: 65, right: -65, duration: 450 }
+  ];
+
+  $("patrol").textContent = "■ Arrêter patrouille";
+  const runStep = () => {
+    if (!connected || !patrolTimer) return;
+    const step = steps[patrolStep % steps.length];
+    drive(step.left, step.right).catch(e => status(e.message, "error"));
+    patrolStep++;
+  };
+
+  runStep();
+  patrolTimer = setInterval(runStep, 900);
+  status("Patrouille activée. Reste près du robot.");
+});
+
+$("diag").addEventListener("click", async () => {
+  log("Nom : " + (device?.name || "aucun"));
+  log("API Bluetooth : " + Boolean(navigator.bluetooth));
+  log("GATT connecté : " + Boolean(device?.gatt?.connected));
+  log("Service FFE1 : " + Boolean(service));
+  log("Écriture FFE3 : " + Boolean(tx));
+  log("Réception FFE2 : " + Boolean(rx));
+  if (service) {
+    try {
+      const characteristics = await service.getCharacteristics();
+      characteristics.forEach(c => {
+        log("Caractéristique " + c.uuid +
+          " — write:" + c.properties.write +
+          " — writeWithoutResponse:" + c.properties.writeWithoutResponse +
+          " — notify:" + c.properties.notify);
+      });
+    } catch (error) {
+      log("Lecture du profil BLE : " + error.message, "error");
+    }
+  }
+  status("Diagnostic ajouté au journal.");
+});
+
+$("clear").addEventListener("click", () => $("log").replaceChildren());
+
+function drawScene() {
+  const canvas = $("scene");
+  const ctx = canvas.getContext("2d");
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return;
+
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, w, h);
+
+  ctx.strokeStyle = "#203247";
+  for (let i = 0; i < 8; i++) {
+    ctx.beginPath();
+    ctx.moveTo(0, h * .4 + i * 14);
+    ctx.lineTo(w, h * .4 + i * 14);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = "#2779d2";
+  ctx.fillRect(w/2 - 43, h/2 - 24, 86, 48);
+  ctx.fillStyle = "#080d14";
+  ctx.fillRect(w/2 - 54, h/2 - 19, 12, 38);
+  ctx.fillRect(w/2 + 42, h/2 - 19, 12, 38);
+  ctx.fillStyle = "#9bd5ff";
+  ctx.fillRect(w/2 - 18, h/2 - 12, 36, 24);
+}
+window.addEventListener("resize", drawScene);
+drawScene();
+
+setUI(false);
+log("Interface initialisée.");
+log("Profil attendu : service FFE1, écriture FFE3, réception FFE2.");
+</script>
+</body>
+</html>
