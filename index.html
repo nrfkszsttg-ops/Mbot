@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#080d18">
-<title>mBot Mobile — Control Center</title>
+<title>mBot Mobile — Simple Control</title>
 <style>
 :root{
   color-scheme:dark;
@@ -13,446 +13,165 @@
   --blue:#62b0ff;--green:#3ce0a0;--red:#ff657b;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-header{padding:23px 18px 18px;background:linear-gradient(135deg,#17345a,#080d18);
-  border-bottom:1px solid var(--border)}
-.eyebrow{font-size:11px;letter-spacing:2px;color:var(--blue);font-weight:800}
-h1{font-size:25px;margin:7px 0}
-.subtitle{font-size:13px;color:var(--muted)}
-main{max-width:680px;margin:auto;padding:14px;display:grid;gap:13px}
-.card{padding:16px;border:1px solid var(--border);border-radius:17px;background:var(--panel)}
-h2{font-size:16px;margin:0 0 13px}
-.row{display:flex;gap:9px;flex-wrap:wrap}
-.row>*{flex:1;min-width:0}
-button{font:inherit;font-weight:700;color:var(--text);background:var(--panel2);
-  border:1px solid var(--border);border-radius:11px;padding:12px;min-height:45px}
-button:disabled{opacity:.45}
-.primary{background:var(--blue);color:#071321;border-color:var(--blue)}
-.danger{background:#391a27;border-color:#743044;color:#ff9dad}
-.status{display:flex;align-items:center;gap:9px;margin-bottom:13px;font-size:13px}
-.dot{width:10px;height:10px;border-radius:50%;background:#68768a;flex-shrink:0}
-.dot.ok{background:var(--green);box-shadow:0 0 12px #3ce0a066}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{padding:20px;background:linear-gradient(135deg,#17345a,#080d18);border-bottom:1px solid var(--border)}
+h1{font-size:22px;margin:5px 0}
+main{max-width:600px;margin:auto;padding:12px;display:grid;gap:12px}
+.card{padding:16px;border:1px solid var(--border);border-radius:14px;background:var(--panel)}
+h2{font-size:15px;margin:0 0 10px}
+.row{display:flex;gap:8px}
+button{font:inherit;font-weight:700;color:var(--text);background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px;flex:1;min-height:45px}
+button.primary{background:var(--blue);color:#071321;border-color:var(--blue)}
+button.danger{background:#391a27;border-color:#743044;color:#ff9dad}
+.status{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px}
+.dot{width:10px;height:10px;border-radius:50%;background:#68768a}
+.dot.ok{background:var(--green);box-shadow:0 0 10px #3ce0a066}
 .dot.err{background:var(--red)}
-.small{font-size:12px;color:var(--muted);line-height:1.6}
-#joystick{position:relative;width:min(76vw,280px);height:min(76vw,280px);
-  margin:8px auto 14px;border:2px solid #354b68;border-radius:50%;
-  background:linear-gradient(90deg,transparent 49.5%,#354b68 49.5%,#354b68 50.5%,transparent 50.5%),
-  linear-gradient(transparent 49.5%,#354b68 49.5%,#354b68 50.5%,transparent 50.5%),
-  radial-gradient(circle,#1d2e47,#0b1220);touch-action:none;user-select:none}
-#stick{position:absolute;width:68px;height:68px;left:calc(50% - 34px);top:calc(50% - 34px);
-  border-radius:50%;border:3px solid #c5e3ff;background:linear-gradient(145deg,#83c5ff,#2677d4);
-  pointer-events:none;box-shadow:0 5px 20px #0008}
-.jlabel{position:absolute;font-size:10px;color:#9db0ca;font-weight:800;letter-spacing:1px}
-.up{top:12px;left:50%;transform:translateX(-50%)}
-.down{bottom:12px;left:50%;transform:translateX(-50%)}
-.left{left:10px;top:50%;transform:translateY(-50%)}
-.right{right:10px;top:50%;transform:translateY(-50%)}
-#readout{text-align:center;color:var(--muted);font-size:12px;margin-bottom:12px}
-.stop{width:100%;font-size:16px;min-height:53px}
-.rangeLabel{display:flex;justify-content:space-between;margin:13px 0 6px;
-  color:var(--muted);font-size:12px}
-input[type=range]{width:100%;accent-color:var(--blue)}
-#log{background:#050912;border:1px solid var(--border);border-radius:10px;
-  padding:10px;min-height:100px;max-height:270px;overflow:auto;white-space:pre-wrap;
-  overflow-wrap:anywhere;font:11px/1.6 ui-monospace,monospace;color:#c0d0e6}
-footer{text-align:center;color:var(--muted);font-size:11px;padding:5px 20px 25px}
+#joystick{position:relative;width:260px;height:260px;margin:10px auto;border:2px solid #354b68;border-radius:50%;background:#111a2a;touch-action:none;user-select:none}
+#stick{position:absolute;width:60px;height:60px;left:100px;top:100px;border-radius:50%;background:var(--blue);pointer-events:none}
+#log{background:#050912;border:1px solid var(--border);border-radius:8px;padding:8px;height:90px;overflow:auto;font:11px monospace;color:#c0d0e6}
 </style>
 </head>
 <body>
 <header>
-  <div class="eyebrow">ROBOTICS / BLUETOOTH LE</div>
-  <h1>mBot Mobile</h1>
-  <div class="subtitle">Control Center · Web Bluetooth</div>
+  <h1>mBot Simple Control</h1>
 </header>
-
 <main>
   <section class="card">
     <h2>Connexion Bluetooth</h2>
-    <div class="status">
-      <span id="dot" class="dot"></span>
-      <span id="status">Non connecté</span>
-    </div>
+    <div class="status"><span id="dot" class="dot"></span><span id="status">Non connecté</span></div>
     <div class="row">
-      <button id="connect" class="primary">Rechercher un robot</button>
+      <button id="connect" class="primary">Connecter</button>
       <button id="disconnect" disabled>Déconnecter</button>
     </div>
-    <p class="small">
-      Allume ton mBot. Le sélecteur peut afficher plusieurs appareils : choisis <b>mBot</b> ou <b>Makeblock</b>.
-    </p>
+  </section>
+
+  <section class="card" style="text-align:center">
+    <h2>Joystick Tactile</h2>
+    <div id="joystick"><div id="stick"></div></div>
+    <div id="readout" style="color:var(--muted);font-size:12px;margin-bottom:10px">Relâché (Stop)</div>
+    <button id="stop" class="danger">■ ARRÊT D'URGENCE</button>
   </section>
 
   <section class="card">
-    <h2>Commandes de déplacement</h2>
-    <div id="joystick">
-      <span class="jlabel up">AVANT</span>
-      <span class="jlabel down">ARRIÈRE</span>
-      <span class="jlabel left">GAUCHE</span>
-      <span class="jlabel right">DROITE</span>
-      <div id="stick"></div>
-    </div>
-    <div id="readout">Moteurs à l’arrêt</div>
-    <button id="stop" class="danger stop">■ ARRÊT</button>
-    <div class="rangeLabel"><span>Vitesse maximale</span><span id="speedText">40 %</span></div>
-    <input id="speed" type="range" min="15" max="100" value="40">
-    <p class="small">Relâche le joystick pour envoyer une commande d’arrêt.</p>
-  </section>
-
-  <section class="card">
-    <h2>Éclairage RGB (Port 4)</h2>
+    <h2>Actions rapides</h2>
     <div class="row">
-      <button data-color="red">Rouge</button>
-      <button data-color="green">Vert</button>
-      <button data-color="blue">Bleu</button>
-    </div>
-    <div class="row" style="margin-top:9px">
-      <button data-color="white">Blanc</button>
-      <button data-color="off">Éteindre</button>
+      <button id="btnBuzzer">Buzzer</button>
+      <button id="btnLed">Matrice LED</button>
     </div>
   </section>
 
   <section class="card">
-    <h2>Buzzer et capteur</h2>
-    <div class="row">
-      <button id="beep">Tester le buzzer</button>
-      <button id="sensor">Lire la distance</button>
-    </div>
-    <p class="small" id="sensorResult">Capteur : aucune lecture.</p>
-  </section>
-
-  <section class="card">
-    <div class="row" style="align-items:center;margin-bottom:12px">
-      <h2 style="margin:0">Diagnostic Bluetooth</h2>
-      <button id="clear" style="flex:0 0 auto">Effacer</button>
-    </div>
-    <div id="log">Site prêt. Appuie sur « Rechercher un robot ».</div>
+    <h2>Journal</h2>
+    <div id="log">Prêt.</div>
   </section>
 </main>
 
-<footer>
-  Interface Web Bluetooth Universelle mBot.
-</footer>
-
 <script>
 "use strict";
-
-// Liste complète et élargie de tous les UUIDs possibles pour modules Makeblock / UART BLE
-const UUID = {
-  makeblockService: "0000ffe0-0000-1000-8000-00805f9b34fb",
-  makeblockChar:    "0000ffe1-0000-1000-8000-00805f9b34fb",
-  makeblockRX:      "0000ffe2-0000-1000-8000-00805f9b34fb",
-  makeblockTX:      "0000ffe3-0000-1000-8000-00805f9b34fb",
-  nordicService:    "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
-  nordicTX:         "6e400002-b5a3-f393-e0a9-e50e24dcca9e",
-  nordicRX:         "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
-};
-
-const RUN = 2, GET = 1;
-const DEV = { JOYSTICK:5, RGBLED:8, TONE:34, ULTRA:1 };
-const PORT = { LED:4, ULTRA:1 }; // LED sur Port 4 corrigé
-const LED_SLOT = 2;
-let invertLeft = true;
-
-let device = null;
-let server = null;
-let tx = null;
-let rx = null;
-let connected = false;
-let seq = 0;
-let writeQueue = Promise.resolve();
-let joystickActive = false;
-let responseBuffer = [];
-let pendingReads = new Map();
-let lastDriveKey = "";
-let lastDriveAt = 0;
+let device = null, tx = null, connected = false;
+let lastSentCmd = "";
 
 const $ = id => document.getElementById(id);
+const log = m => { $("log").textContent += "\n" + m; $("log").scrollTop = $("log").scrollHeight; };
 
-function log(message, type = "info") {
-  const time = new Date().toLocaleTimeString();
-  const prefix = type === "error" ? "ERREUR" : type === "ok" ? "OK" : "INFO";
-  $("log").textContent += `\n[${time}] ${prefix} · ${message}`;
-  $("log").scrollTop = $("log").scrollHeight;
-}
-
-function setStatus(message, state = "idle") {
-  $("status").textContent = message;
-  $("dot").className = "dot" + (state === "ok" ? " ok" : state === "error" ? " err" : "");
-}
-
-function updateButtons() {
-  $("connect").disabled = connected;
-  $("disconnect").disabled = !connected;
-}
-
-function resetStick() {
-  $("stick").style.left = "calc(50% - 34px)";
-  $("stick").style.top = "calc(50% - 34px)";
-}
-
-function hex(data) {
-  return Array.from(data).map(v => v.toString(16).padStart(2,"0")).join(" ");
-}
-
-function i16(value) {
-  const n = Math.max(-32768, Math.min(32767, Math.round(value)));
-  return [n & 255, (n >> 8) & 255];
-}
-
-function frame(action, deviceId, params = []) {
-  const id = (seq = (seq + 1) & 0x7f);
-  const body = [id, action, deviceId, ...params];
-  return { id, bytes: new Uint8Array([0xff, 0x55, body.length, ...body]) };
-}
-
-function isWritable(c) {
-  return c.properties.write || c.properties.writeWithoutResponse;
-}
-function isNotifiable(c) {
-  return c.properties.notify || c.properties.indicate;
-}
-
-async function writeCharacteristic(characteristic, bytes) {
-  if (typeof characteristic.writeValueWithoutResponse === "function" && characteristic.properties.writeWithoutResponse) {
-    try {
-      await characteristic.writeValueWithoutResponse(bytes);
-      return "writeValueWithoutResponse";
-    } catch (e) {}
-  }
-  if (typeof characteristic.writeValueWithResponse === "function" && characteristic.properties.write) {
-    await characteristic.writeValueWithResponse(bytes);
-    return "writeValueWithResponse";
-  }
-  await characteristic.writeValue(bytes);
-  return "writeValue";
-}
-
-function sendBytes(bytes, description = "Commande") {
-  if (!connected || !tx) return Promise.resolve(false);
-
-  writeQueue = writeQueue.catch(() => {}).then(async () => {
-    if (!connected || !tx) return false;
-    try {
-      const method = await writeCharacteristic(tx, bytes);
-      return true;
-    } catch (error) {
-      log(`${description} impossible : ${error.message}`, "error");
-      return false;
-    }
-  });
-  return writeQueue;
-}
-
-function sendDevice(deviceId, params, description) {
-  return sendBytes(frame(RUN, deviceId, params).bytes, description);
-}
-
-async function motors(left, right, force = false) {
-  if (!connected) return;
-  const key = `${left},${right}`;
-  const now = Date.now();
-  if (!force && key === lastDriveKey && now - lastDriveAt < 100) return;
-  lastDriveKey = key;
-  lastDriveAt = now;
-
-  const l = invertLeft ? -left : left;
-  await sendDevice(DEV.JOYSTICK, [...i16(l), ...i16(right)], "Moteurs");
-}
-
-async function stopRobot() {
-  joystickActive = false;
-  resetStick();
-  $("readout").textContent = "Moteurs à l’arrêt";
-  lastDriveKey = "";
-  if (connected) await motors(0, 0, true);
-}
-
-async function discoverGatt(gatt) {
-  const services = await gatt.getPrimaryServices();
-  log(`Services GATT détectés : ${services.length}`);
-  const allCharacteristics = [];
-
-  for (const s of services) {
-    try {
-      const chars = await s.getCharacteristics();
-      for (const c of chars) {
-        allCharacteristics.push({ service: s, characteristic: c });
-      }
-    } catch (e) {}
-  }
-
-  // Recherche universelle de la caractéristique d'écriture (TX)
-  tx = allCharacteristics.find(x => isWritable(x.characteristic))?.characteristic || null;
-  // Recherche universelle de la caractéristique de lecture/notification (RX)
-  rx = allCharacteristics.find(x => isNotifiable(x.characteristic))?.characteristic || null;
-
-  if (!tx) {
-    throw new Error("Aucune caractéristique d’écriture compatible trouvée.");
-  }
-  log("Canal d'envoi (TX) configuré avec succès.", "ok");
-}
-
-async function connectRobot() {
-  if (!navigator.bluetooth) {
-    setStatus("Bluetooth indisponible", "error");
-    log("L'API Web Bluetooth n'est pas supportée par ce navigateur.", "error");
-    return;
-  }
-
-  $("connect").disabled = true;
-  setStatus("Recherche Bluetooth…");
-
+async function sendCmd(cmd) {
+  if (!connected || !tx) return;
+  if (cmd === lastSentCmd && cmd !== "0") return; // Évite de spammer si la commande ne change pas
+  lastSentCmd = cmd;
   try {
-    // acceptAllDevices à true + inclusion de tous les services possibles pour éviter les rejets
+    const encoder = new TextEncoder();
+    await tx.writeValueWithoutResponse(encoder.encode(cmd));
+    log("Envoyé : " + cmd);
+  } catch (e) {
+    log("Erreur d'envoi : " + e.message);
+  }
+}
+
+async function connect() {
+  try {
     device = await navigator.bluetooth.requestDevice({
       acceptAllDevices: true,
-      optionalServices: [
-        UUID.makeblockService,
-        UUID.nordicService,
-        "0000ffe0-0000-1000-8000-00805f9b34fb",
-        "0000ffe1-0000-1000-8000-00805f9b34fb",
-        "device_information",
-        "battery_service"
-      ]
+      optionalServices: ["0000ffe0-0000-1000-8000-00805f9b34fb", "6e400001-b5a3-f393-e0a9-e50e24dcca9e"]
     });
-
-    if (!device) throw new Error("Aucun appareil sélectionné.");
-    log(`Appareil choisi : ${device.name || "Inconnu"}`);
-    setStatus("Connexion GATT…");
-
-    device.addEventListener("gattserverdisconnected", () => {
-      connected = false;
-      tx = null;
-      rx = null;
-      updateButtons();
-      setStatus("Robot déconnecté", "error");
-      resetStick();
-      log("Connexion Bluetooth perdue.", "error");
-    });
-
-    server = await device.gatt.connect();
-    log("Connexion GATT établie.", "ok");
-
-    await discoverGatt(server);
-
-    if (rx && typeof rx.startNotifications === "function") {
-      try {
-        await rx.startNotifications();
-        rx.addEventListener("characteristicvaluechanged", (e) => {
-          // Gestion simplifiée des retours capteurs si besoin
-        });
-      } catch (err) {}
+    const server = await device.gatt.connect();
+    const services = await server.getPrimaryServices();
+    for (let s of services) {
+      const chars = await s.getCharacteristics();
+      for (let c of chars) {
+        if (c.properties.write || c.properties.writeWithoutResponse) {
+          tx = c;
+          break;
+        }
+      }
+      if (tx) break;
     }
-
+    if (!tx) throw new Error("Aucune caractéristique d'écriture trouvée.");
+    
     connected = true;
-    updateButtons();
-    setStatus("Connecté à " + (device.name || "mBot"), "ok");
-    log("Prêt à piloter !", "ok");
-
-  } catch (error) {
-    log(`ÉCHEC DE CONNEXION : ${error.message}`, "error");
-    connected = false;
-    tx = null;
-    rx = null;
-    updateButtons();
-    setStatus("Connexion échouée", "error");
-    $("connect").disabled = false;
+    $("connect").disabled = true;
+    $("disconnect").disabled = false;
+    $("dot").className = "dot ok";
+    $("status").textContent = "Connecté à " + (device.name || "mBot");
+    log("Connecté avec succès !");
+  } catch (e) {
+    log("Erreur connexion : " + e.message);
   }
 }
 
-/* Joystick tactile */
-const joy = $("joystick");
-const stick = $("stick");
+$("connect").onclick = connect;
+$("disconnect").onclick = () => {
+  if (device && device.gatt.connected) device.gatt.disconnect();
+  connected = false;
+  $("connect").disabled = false;
+  $("disconnect").disabled = true;
+  $("dot").className = "dot";
+  $("status").textContent = "Non connecté";
+  log("Déconnecté.");
+};
 
-function moveJoystick(event) {
-  if (!joystickActive || !connected) return;
+// Gestion Joystick simplifiée (Envoie '1':Avancer, '2':Reculer, '3':Gauche, '4':Droite, '0':Stop)
+const joy = $("joystick"), stick = $("stick");
+let active = false;
+
+function handleMove(e) {
+  if (!active) return;
   const rect = joy.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
-  const radius = rect.width * 0.32;
+  let dx = e.clientX - cx, dy = e.clientY - cy;
+  const dist = Math.hypot(dx, dy);
+  const maxR = 90;
 
-  let dx = event.clientX - cx;
-  let dy = event.clientY - cy;
-  const distance = Math.hypot(dx, dy);
+  if (dist > maxR) { dx = (dx/dist)*maxR; dy = (dy/dist)*maxR; }
+  stick.style.left = (100 + dx) + "px";
+  stick.style.top = (100 + dy) + "px";
 
-  if (distance > radius) {
-    dx = (dx / distance) * radius;
-    dy = (dy / distance) * radius;
+  if (Math.abs(dy) > Math.abs(dx)) {
+    if (dy < -20) { sendCmd("1"); $("readout").textContent = "Avancer ('1')"; }
+    else if (dy > 20) { sendCmd("2"); $("readout").textContent = "Reculer ('2')"; }
+  } else {
+    if (dx < -20) { sendCmd("3"); $("readout").textContent = "Gauche ('3')"; }
+    else if (dx > 20) { sendCmd("4"); $("readout").textContent = "Droite ('4')"; }
   }
-
-  stick.style.left = `calc(50% - 34px + ${dx}px)`;
-  stick.style.top = `calc(50% - 34px + ${dy}px)`;
-
-  const max = Number($("speed").value) * 2.55;
-  const forward = (-dy / radius) * max;
-  const turn = (dx / radius) * max;
-
-  let left = Math.round(forward + turn);
-  let right = Math.round(forward - turn);
-  const scale = Math.max(255, Math.abs(left), Math.abs(right));
-
-  left = Math.round((left * 255) / scale);
-  right = Math.round((right * 255) / scale);
-
-  $("readout").textContent = `Gauche ${left} · Droite ${right}`;
-  motors(left, right);
 }
 
-joy.addEventListener("pointerdown", e => {
-  if (!connected) return;
-  joystickActive = true;
-  joy.setPointerCapture(e.pointerId);
-  moveJoystick(e);
-});
-joy.addEventListener("pointermove", moveJoystick);
+joy.onpointerdown = e => { active = true; joy.setPointerCapture(e.pointerId); };
+joy.onpointermove = handleMove;
+function release() {
+  if (!active) return;
+  active = false;
+  stick.style.left = "100px";
+  stick.style.top = "100px";
+  sendCmd("0");
+  $("readout").textContent = "Arrêt ('0')";
+}
+joy.onpointerup = release;
+joy.onpointercancel = release;
 
-const releaseJoystick = () => { if (joystickActive) stopRobot(); };
-joy.addEventListener("pointerup", releaseJoystick);
-joy.addEventListener("pointercancel", releaseJoystick);
-
-$("speed").addEventListener("input", () => {
-  $("speedText").textContent = $("speed").value + " %";
-});
-
-$("connect").addEventListener("click", connectRobot);
-
-$("disconnect").addEventListener("click", async () => {
-  await stopRobot();
-  if (device && device.gatt.connected) device.gatt.disconnect();
-  connected = false;
-  updateButtons();
-  setStatus("Non connecté");
-  log("Déconnecté.");
-});
-
-$("stop").addEventListener("click", stopRobot);
-
-// Boutons Couleurs LEDs (Port 4)
-const colors = {
-  red:[255,0,0], green:[0,255,0], blue:[0,80,255], white:[255,255,255], off:[0,0,0]
-};
-document.querySelectorAll("[data-color]").forEach(btn => {
-  btn.addEventListener("click", () => {
-    if (!connected) return;
-    const [r, g, b] = colors[btn.dataset.color];
-    sendDevice(DEV.RGBLED, [PORT.LED, LED_SLOT, 0, r, g, b], "LEDs");
-  });
-});
-
-$("beep").addEventListener("click", () => {
-  if (!connected) return;
-  sendDevice(DEV.TONE, [...i16(1046), ...i16(220)], "Buzzer");
-});
-
-$("sensor").addEventListener("click", async () => {
-  $("sensorResult").textContent = "Lecture ultrasons en cours...";
-  // Note: La lecture dépend du firmware d'origine
-  $("sensorResult").textContent = "Commande ultrason envoyée.";
-});
-
-$("clear").addEventListener("click", () => { $("log").textContent = "Journal effacé."; });
-
-updateButtons();
+$("stop").onclick = () => { sendCmd("0"); $("readout").textContent = "Arrêt d'urgence ('0')"; };
+$("btnBuzzer").onclick = () => sendCmd("5");
+$("btnLed").onclick = () => sendCmd("6");
 </script>
 </body>
 </html>
