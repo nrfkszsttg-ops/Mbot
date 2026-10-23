@@ -47,6 +47,14 @@ button:disabled { opacity:.45; }
   position:absolute; width:60px; height:60px; left:98px; top:98px;
   border-radius:50%; background:var(--blue); pointer-events:none;
 }
+
+#powerPanel { margin:14px auto 8px; max-width:420px; text-align:left; }
+.power-top { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px; }
+#powerValue { color:var(--blue); font-weight:800; font-variant-numeric:tabular-nums; }
+#power { width:100%; accent-color:var(--blue); cursor:pointer; }
+.power-meter { height:10px; background:#050912; border:1px solid var(--border); border-radius:999px; overflow:hidden; margin-top:8px; }
+#powerFill { height:100%; width:70%; background:linear-gradient(90deg,#3ce0a0,#62b0ff); border-radius:999px; transition:width .08s linear; }
+
 #log {
   background:#050912; border:1px solid var(--border); border-radius:8px;
   padding:8px; height:110px; overflow:auto; overflow-wrap:anywhere;
@@ -76,6 +84,15 @@ button:disabled { opacity:.45; }
     <h2>Joystick tactile</h2>
     <div id="joystick"><div id="stick"></div></div>
     <div id="readout" class="note">Relâché — Stop</div>
+    <div id="powerPanel">
+      <div class="power-top">
+        <label for="power">Puissance des moteurs</label>
+        <span id="powerValue">70 %</span>
+      </div>
+      <input id="power" type="range" min="15" max="100" step="5" value="70" aria-label="Puissance des moteurs">
+      <div class="power-meter"><div id="powerFill"></div></div>
+      <p class="note">Règle la vitesse pendant que tu maintiens le joystick. La puissance est envoyée au robot via la commande P:xx.</p>
+    </div>
     <button id="stop" class="danger">■ ARRÊT D'URGENCE</button>
   </section>
 
@@ -372,6 +389,25 @@ setInterval(() => {
 
 $("btnBuzzer").addEventListener("click", () => sendCmd("5", true));
 $("btnLed").addEventListener("click", () => sendCmd("6", true));
+
+// Barre de puissance : commande ajoutée, sans modifier la connexion Bluetooth.
+const powerSlider = $("power");
+function updatePowerDisplay() {
+  const value = Number(powerSlider.value);
+  $("powerValue").textContent = value + " %";
+  $("powerFill").style.width = value + "%";
+}
+powerSlider.addEventListener("input", updatePowerDisplay);
+powerSlider.addEventListener("change", () => {
+  const value = Number(powerSlider.value);
+  if (connected) {
+    sendCmd("P:" + value + "\n", true);
+    log("Puissance demandée : " + value + " %");
+  } else {
+    log("Puissance réglée à " + value + " % ; connecte le robot pour l'envoyer.");
+  }
+});
+updatePowerDisplay();
 
 window.addEventListener("blur", releaseJoystick);
 document.addEventListener("visibilitychange", () => {
