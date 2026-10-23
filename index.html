@@ -28,15 +28,26 @@ input{min-width:0;width:100%;background:var(--p2);border:1px solid var(--border)
 #stick{position:absolute;left:98px;top:98px;width:60px;height:60px;border-radius:50%;background:var(--blue);box-shadow:0 0 20px #62b0ff66;pointer-events:none}
 #readout{text-align:center;color:var(--muted);font-size:12px;margin-bottom:12px}
 #log{height:110px;overflow:auto;overflow-wrap:anywhere;background:#050912;border:1px solid var(--border);border-radius:8px;padding:8px;font:11px monospace;white-space:pre-wrap;color:#c0d0e6}
-canvas{width:100%;display:block;border-radius:10px;background:#050912}
-.scene3d{position:relative;height:270px;overflow:hidden;border:1px solid var(--border);border-radius:12px;background:radial-gradient(ellipse at 50% 35%,#172c40,#080d15 75%);perspective:650px}
-.floor3d{position:absolute;left:-25%;top:34%;width:150%;height:130%;transform:rotateX(62deg);transform-origin:top center;background-image:linear-gradient(#31516b66 1px,transparent 1px),linear-gradient(90deg,#31516b66 1px,transparent 1px);background-size:28px 28px}
-.sensor3d{position:absolute;left:7%;top:43%;width:58px;height:40px;border:2px solid #91a8bc;border-radius:9px;background:linear-gradient(145deg,#667b8e,#29394a);display:flex;align-items:center;justify-content:space-evenly;z-index:3;box-shadow:0 5px 12px #0008}
-.sensor3d span{width:17px;height:17px;border:3px solid #42d9ff;border-radius:50%;background:#101c28;box-shadow:0 0 8px #42d9ff66}
-#beam3d{position:absolute;left:17%;top:35%;width:65%;height:105px;background:linear-gradient(90deg,#36d9ff55,#36d9ff08);clip-path:polygon(0 40%,100% 0,100% 100%,0 60%);transform:skewY(-4deg);transition:width .2s ease;z-index:1}
-#obstacle3d{position:absolute;left:72%;top:35%;width:30px;height:76px;border:1px solid #ffbd86;border-radius:4px;background:linear-gradient(90deg,#ff9b47,#d95036);box-shadow:0 0 18px #ff783855;transform:rotateY(-12deg);transition:left .25s ease;z-index:2}
-.sceneLabel{position:absolute;right:10px;top:10px;font-size:11px;color:var(--muted);z-index:4}
-#distance{font-size:13px;color:var(--green);font-weight:700}
+.scene3d{position:relative;height:300px;overflow:hidden;border:1px solid #23364e;border-radius:12px;background:radial-gradient(ellipse at 50% 25%,#14263b 0%,#080d18 72%);isolation:isolate}
+.scene3d:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,#080d18aa);pointer-events:none;z-index:4}
+.floor3d{position:absolute;left:-25%;right:-25%;bottom:-82px;height:260px;transform:perspective(360px) rotateX(62deg);transform-origin:center top;background-image:linear-gradient(#27415b88 1px,transparent 1px),linear-gradient(90deg,#27415b88 1px,transparent 1px);background-size:28px 28px;border-top:1px solid #35577566}
+.beam3d{position:absolute;left:50%;bottom:58px;width:58%;height:180px;transform:translateX(-50%);background:linear-gradient(180deg,#3ce0a055,#3ce0a008);clip-path:polygon(43% 100%,57% 100%,100% 0,0 0);filter:drop-shadow(0 0 8px #3ce0a033);z-index:1}
+.robot3d{position:absolute;left:50%;bottom:24px;width:88px;height:48px;transform:translateX(-50%) perspective(300px) rotateX(8deg);z-index:3}
+.robot3d .body{position:absolute;left:8px;right:8px;top:7px;height:29px;border:1px solid #8acbff;background:linear-gradient(135deg,#62b0ff,#245c91);border-radius:8px;box-shadow:0 5px 16px #0008}
+.robot3d .nose{position:absolute;left:35px;top:-2px;width:18px;height:13px;border-radius:5px 5px 2px 2px;background:#b9e2ff;border:1px solid #e6f5ff;z-index:2}
+.robot3d .wheel{position:absolute;top:12px;width:10px;height:25px;border-radius:4px;background:#202b3a;border:1px solid #647b91;z-index:-1}
+.robot3d .wheel.left{left:0}.robot3d .wheel.right{right:0}
+.robot-label{position:absolute;left:0;right:0;bottom:4px;text-align:center;font-size:10px;letter-spacing:2px;color:#d7edff;z-index:4}
+.obstacle3d{position:absolute;left:50%;bottom:105px;width:48px;height:36px;transform:translateX(-50%);border:1px solid #ff9cab;border-radius:5px 5px 2px 2px;background:linear-gradient(135deg,#ff7c90,#8f263f);box-shadow:0 0 22px #ff657b55;z-index:2;transition:bottom .25s ease,opacity .25s ease}
+.obstacle3d:before{content:"";position:absolute;left:6px;right:6px;bottom:-7px;height:7px;background:#681d31;transform:skewX(-35deg);border-radius:0 0 3px 3px}
+.obstacle3d:after{content:"";position:absolute;left:5px;right:5px;top:6px;height:3px;background:#ffd2d9aa;border-radius:2px}
+.scene-label{position:absolute;top:12px;left:12px;font-size:11px;color:#9db5ce;z-index:5}
+.scene-distance{position:absolute;top:12px;right:12px;font-size:12px;font-weight:700;color:#3ce0a0;z-index:5}
+.scene-legend{display:flex;justify-content:space-between;gap:8px;margin-top:10px;font-size:11px;color:var(--muted)}
+.scene-legend span{display:flex;align-items:center;gap:6px}
+.legend-dot{width:8px;height:8px;border-radius:50%;background:#3ce0a0;display:inline-block}
+.legend-dot.red{background:#ff657b}
+@media(max-width:380px){.scene3d{height:270px}.scene-legend{font-size:10px}}
 </style>
 </head>
 <body>
@@ -75,16 +86,25 @@ canvas{width:100%;display:block;border-radius:10px;background:#050912}
 </section>
 
 <section class="card">
-<h2>Visualisation 3D du capteur ultrasonique</h2>
-<p class="note">Port 1 · Vue en perspective · L’obstacle se déplace selon la distance reçue.</p>
-<div class="scene3d" aria-label="Visualisation en perspective du capteur ultrasonique">
-  <div class="sceneLabel">VUE 3D SIMULÉE</div>
+<h2>Capteur ultrasonore — Vue 3D</h2>
+<div class="scene3d" id="scene3d" role="img" aria-label="Visualisation 3D du robot et de la distance à l'obstacle">
+  <div class="scene-label">VUE AVANT · PORT 1</div>
+  <div class="scene-distance" id="sceneDistance">-- cm</div>
   <div class="floor3d"></div>
-  <div id="beam3d"></div>
-  <div id="obstacle3d"></div>
-  <div class="sensor3d" title="Capteur ultrasonique"><span></span><span></span></div>
+  <div class="beam3d"></div>
+  <div class="obstacle3d" id="obstacle3d"></div>
+  <div class="robot3d">
+    <div class="wheel left"></div><div class="wheel right"></div>
+    <div class="nose"></div><div class="body"></div>
+    <div class="robot-label">mBOT</div>
+  </div>
+</div>
+<div class="scene-legend">
+  <span><i class="legend-dot"></i> Faisceau du capteur</span>
+  <span><i class="legend-dot red"></i> Obstacle détecté</span>
 </div>
 <div id="distance" class="note">Distance : en attente du robot…</div>
+<p class="note">La position de l’obstacle est indicative et se met à jour avec les mesures reçues par Bluetooth.</p>
 </section>
 
 <section class="card">
@@ -120,31 +140,39 @@ function status(message,state=""){
 }
 
 function drawSonar(){
-  // La scène en perspective est dessinée en CSS.
   updateDistance3D(sonarDistance);
+}
+
+function updateDistance3D(value){
+  const obstacle=$("obstacle3d");
+  const label=$("sceneDistance");
+  if(!obstacle||!label)return;
+
+  if(value===null||!Number.isFinite(Number(value))){
+    obstacle.style.opacity="0.35";
+    obstacle.style.bottom="180px";
+    label.textContent="-- cm";
+    label.style.color="#96a8c1";
+    return;
+  }
+
+  const d=Math.max(0,Math.min(Number(value),200));
+  // Plus la distance est faible, plus l’obstacle est proche du robot.
+  const bottom=65+(d/200)*155;
+  obstacle.style.bottom=bottom+"px";
+  obstacle.style.opacity=d>180?"0.55":"1";
+  label.textContent=Number(value).toFixed(1)+" cm";
+  label.style.color=d<30?"#ff657b":(d<70?"#ffd166":"#3ce0a0");
+  obstacle.style.transform="translateX(-50%) scale("+(1.15-(d/200)*0.45)+")";
 }
 
 function updateDistance(value){
   const d=Number(value);
-  if(!Number.isFinite(d)||d<=0||d>500)return;
+  if(!Number.isFinite(d)||d<0||d>500)return;
   sonarDistance=d;
   $("distance").textContent="Distance mesurée : "+d.toFixed(1)+" cm";
-  updateDistance3D(d);
+  drawSonar();
 }
-
-function updateDistance3D(cm){
-  const obstacle=$("obstacle3d"), beam=$("beam3d");
-  if(cm===null||!Number.isFinite(Number(cm))){
-    obstacle.style.left="72%";
-    beam.style.width="65%";
-    return;
-  }
-  const d=Math.max(20,Math.min(Number(cm),200));
-  const position=20+((d-20)/180)*68;
-  obstacle.style.left=position+"%";
-  beam.style.width=Math.max(8,position-17)+"%";
-}
-
 function processIncoming(text){
   rxBuffer+=text;
   if(rxBuffer.length>512)rxBuffer=rxBuffer.slice(-512);
