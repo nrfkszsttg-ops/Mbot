@@ -72,10 +72,214 @@ input[type="color"]{width:60px;height:45px;padding:3px;border:1px solid var(--bo
   font:11px monospace; color:#c0d0e6; white-space:pre-wrap;
 }
 .note { color:var(--muted); font-size:12px; line-height:1.5; }
+
+
+/* Sélecteur d'affichage — la disposition classique reste inchangée */
+.header-line { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.view-selector { display:flex; gap:7px; }
+.view-selector button { min-height:34px; padding:7px 12px; font-size:12px; flex:0 0 auto; }
+.view-selector button.active-view { background:var(--blue); color:#071321; border-color:var(--blue); }
+
+/* Vraie disposition type manette, activée uniquement par le bouton */
+body.controller-mode { height:100dvh; overflow:hidden; }
+body.controller-mode header { height:48px; padding:5px 12px; }
+body.controller-mode h1 { font-size:16px; margin:0; white-space:nowrap; }
+body.controller-mode main {
+  width:100%; max-width:1500px; height:calc(100dvh - 48px); margin:0 auto;
+  padding:7px; gap:7px; overflow:hidden;
+  grid-template-columns:minmax(190px,1.05fr) minmax(170px,1fr) minmax(190px,1.15fr) minmax(190px,1fr);
+  grid-template-rows:minmax(0,1fr) minmax(0,1fr);
+}
+body.controller-mode .card { min-width:0; min-height:0; padding:9px; border-radius:12px; overflow:hidden; }
+body.controller-mode h2 { font-size:12px; margin:0 0 7px; }
+body.controller-mode .note { display:none; }
+body.controller-mode .row { gap:5px; }
+body.controller-mode button { min-width:0; min-height:34px; padding:6px 5px; font-size:11px; border-radius:8px; }
+body.controller-mode .status { margin-bottom:6px; font-size:11px; }
+body.controller-mode section:nth-child(1) { grid-column:2; grid-row:1; }
+body.controller-mode section:nth-child(2) { grid-column:1; grid-row:1 / span 2; display:flex; flex-direction:column; justify-content:center; }
+body.controller-mode section:nth-child(3) { grid-column:2; grid-row:2; }
+body.controller-mode section:nth-child(4) { grid-column:3; grid-row:1; }
+body.controller-mode section:nth-child(5) { grid-column:4; grid-row:1; }
+body.controller-mode section:nth-child(6) { grid-column:4; grid-row:2; }
+body.controller-mode section:nth-child(7) { grid-column:3; grid-row:2; }
+body.controller-mode #joystick { width:min( min(25vw, 34vh), 190px); height:min( min(25vw, 34vh), 190px); margin:7px auto; flex:0 0 auto; }
+body.controller-mode #stick { width:48px; height:48px; }
+body.controller-mode #powerPanel { margin:6px auto; width:100%; }
+body.controller-mode .power-top { margin-bottom:4px; font-size:11px; }
+body.controller-mode .power-meter { height:7px; margin-top:4px; }
+body.controller-mode #stop { min-height:42px; font-size:12px; }
+body.controller-mode .scene3d { height:calc(100% - 55px); min-height:95px; margin-top:5px; }
+body.controller-mode #distance { font-size:11px; margin-top:5px; }
+body.controller-mode #ledText { padding:8px; font-size:12px; }
+body.controller-mode input[type="text"] { padding:8px; font-size:12px; }
+body.controller-mode input[type="color"] { width:38px; height:34px; }
+body.controller-mode #log { height:calc(100% - 58px); min-height:60px; padding:5px; font-size:9px; }
+body.controller-mode #clearLog { margin-top:5px !important; min-height:29px; }
+body.controller-mode section:nth-child(1) .row { flex-direction:column; }
+body.controller-mode section:nth-child(1) button { min-height:30px; }
+body.controller-mode section:nth-child(3) .row { flex-wrap:wrap; }
+body.controller-mode section:nth-child(3) .mode-button { min-height:38px; }
+@media (max-height:500px) {
+  body.controller-mode header { height:42px; padding:4px 9px; }
+  body.controller-mode main { height:calc(100dvh - 42px); padding:5px; gap:5px; }
+  body.controller-mode .card { padding:6px; }
+  body.controller-mode #joystick { width:min(22vw, 29vh, 145px); height:min(22vw, 29vh, 145px); }
+  body.controller-mode #stick { width:40px; height:40px; }
+  body.controller-mode button { min-height:28px; padding:4px; font-size:10px; }
+  body.controller-mode .scene3d { min-height:65px; }
+}
+@media (max-width:760px) and (orientation:landscape) {
+  body.controller-mode main { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  body.controller-mode .card { padding:5px; }
+  body.controller-mode section:nth-child(4) .scene3d { height:calc(100% - 50px); min-height:55px; }
+  body.controller-mode #joystick { width:min(21vw,28vh,125px); height:min(21vw,28vh,125px); }
+  body.controller-mode #stick { width:36px; height:36px; }
+  body.controller-mode #log { height:calc(100% - 45px); min-height:35px; }
+}
+
+
+
+/* Ergonomie téléphone : une vraie disposition de manette en paysage */
+@media (max-width: 900px) and (orientation: landscape) {
+  body.controller-mode { height:100dvh; min-height:0; overflow:hidden; }
+  body.controller-mode header { height:42px; padding:4px 8px; }
+  body.controller-mode h1 { font-size:14px; }
+  body.controller-mode .view-selector { gap:4px; }
+  body.controller-mode .view-selector button { min-height:30px; padding:4px 8px; font-size:10px; }
+  body.controller-mode main {
+    height:calc(100dvh - 42px); width:100%; max-width:none;
+    padding:5px; gap:5px; overflow:hidden;
+    grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) minmax(0,.9fr);
+    grid-template-rows:minmax(0,1fr) minmax(0,.72fr) minmax(0,.72fr);
+  }
+  body.controller-mode .card { padding:6px; border-radius:12px; }
+  body.controller-mode h2 { font-size:10px; margin:0 0 4px; }
+  body.controller-mode button { min-height:31px; padding:4px 3px; font-size:10px; border-radius:8px; }
+  body.controller-mode .status { font-size:10px; margin-bottom:4px; }
+  body.controller-mode section:nth-child(1) { grid-column:3; grid-row:1; }
+  body.controller-mode section:nth-child(2) { grid-column:1; grid-row:1 / span 3; display:flex; flex-direction:column; justify-content:center; }
+  body.controller-mode section:nth-child(3) { grid-column:2; grid-row:1 / span 3; display:flex; flex-direction:column; justify-content:center; }
+  body.controller-mode section:nth-child(4),
+  body.controller-mode section:nth-child(7) { display:none !important; }
+  body.controller-mode section:nth-child(5) { grid-column:3; grid-row:2; }
+  body.controller-mode section:nth-child(6) { grid-column:3; grid-row:3; }
+  body.controller-mode section:nth-child(1) .row { flex-direction:column; gap:3px; }
+  body.controller-mode section:nth-child(1) button { min-height:27px; }
+  body.controller-mode #joystick { width:min(34vw,48vh,190px); height:min(34vw,48vh,190px); margin:6px auto; flex:0 0 auto; }
+  body.controller-mode #stick { width:44px; height:44px; }
+  body.controller-mode #readout { font-size:10px; }
+  body.controller-mode #powerPanel { margin:4px auto; width:100%; }
+  body.controller-mode .power-top { font-size:10px; gap:4px; margin-bottom:2px; }
+  body.controller-mode .power-meter { height:5px; margin-top:2px; }
+  body.controller-mode #stop { min-height:38px; font-size:11px; }
+  body.controller-mode section:nth-child(3) .row { flex-direction:column; gap:6px; }
+  body.controller-mode section:nth-child(3) .mode-button { min-height:39px; font-size:11px; }
+  body.controller-mode section:nth-child(3) > .row:last-of-type { margin-top:8px; }
+  body.controller-mode section:nth-child(3) > .row:last-of-type button { min-height:34px; }
+  body.controller-mode section:nth-child(5) input[type="text"] { padding:6px; font-size:10px; }
+  body.controller-mode section:nth-child(5) #sendText { margin-top:4px !important; min-height:27px; }
+  body.controller-mode section:nth-child(6) .row { flex-wrap:wrap; gap:3px; }
+  body.controller-mode section:nth-child(6) label { display:none; }
+  body.controller-mode input[type="color"] { width:34px; height:30px; }
+  body.controller-mode section:nth-child(6) button { min-height:29px; }
+}
+
+/* Portrait : prévenir l'utilisation d'une disposition paysage trop étroite */
+@media (max-width: 600px) and (orientation: portrait) {
+  body.controller-mode { height:auto; min-height:100dvh; overflow:auto; }
+  body.controller-mode header { height:auto; padding:8px; }
+  body.controller-mode .header-line { align-items:flex-start; flex-direction:column; gap:6px; }
+  body.controller-mode h1 { font-size:16px; }
+  body.controller-mode main { height:auto; overflow:visible; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:auto; }
+  body.controller-mode section:nth-child(1) { grid-column:1 / -1; grid-row:auto; }
+  body.controller-mode section:nth-child(2) { grid-column:1 / -1; grid-row:auto; }
+  body.controller-mode section:nth-child(3) { grid-column:1 / -1; grid-row:auto; }
+  body.controller-mode section:nth-child(4), body.controller-mode section:nth-child(7) { display:block !important; }
+  body.controller-mode section:nth-child(5), body.controller-mode section:nth-child(6) { grid-column:auto; grid-row:auto; }
+  body.controller-mode #joystick { width:min(68vw,280px); height:min(68vw,280px); }
+  body.controller-mode #stick { width:54px; height:54px; }
+  body.controller-mode section:nth-child(3) .row { flex-direction:row; flex-wrap:wrap; }
+}
+
+
+/* Disposition manette revue : suivi/connexion/3D à gauche, modes et LED au centre,
+   joystick à droite, texte de matrice dans une zone séparée en bas. */
+.phone-battery{font-size:11px;color:var(--muted);white-space:nowrap;padding:5px 8px;border:1px solid var(--border);border-radius:999px;background:#080d1888}
+body.controller-mode header .header-line{display:flex;align-items:center;gap:8px}
+body.controller-mode main{
+  grid-template-columns:minmax(170px,1fr) minmax(190px,1.05fr) minmax(190px,1fr);
+  grid-template-rows:minmax(105px,.65fr) minmax(170px,1.4fr) minmax(90px,.65fr) minmax(90px,.6fr);
+  overflow-y:auto;overflow-x:hidden;height:calc(100dvh - 48px);align-content:stretch;
+}
+body.controller-mode section:nth-child(1){grid-column:1;grid-row:1}
+body.controller-mode section:nth-child(4){grid-column:1;grid-row:2}
+body.controller-mode section:nth-child(7){grid-column:1;grid-row:3 / span 2}
+body.controller-mode section:nth-child(3){grid-column:2;grid-row:1 / span 2}
+body.controller-mode section:nth-child(6){grid-column:2;grid-row:3}
+body.controller-mode section:nth-child(2){grid-column:3;grid-row:1 / span 3;display:flex;flex-direction:column;justify-content:center}
+body.controller-mode section:nth-child(5){grid-column:1 / -1;grid-row:4}
+body.controller-mode section:nth-child(4) .scene3d{height:calc(100% - 44px);min-height:100px}
+body.controller-mode section:nth-child(7) #log{height:calc(100% - 42px);min-height:65px}
+body.controller-mode section:nth-child(3) .row{flex-direction:column;gap:7px}
+body.controller-mode section:nth-child(3) .mode-button{min-height:42px;font-size:12px}
+body.controller-mode section:nth-child(3) > .row:last-of-type{margin-top:10px}
+body.controller-mode section:nth-child(6) .row{align-items:center;flex-wrap:wrap}
+body.controller-mode section:nth-child(5){display:flex;flex-direction:column;justify-content:center}
+body.controller-mode #joystick{width:min(28vw,42vh,230px);height:min(28vw,42vh,230px)}
+body.controller-mode #stick{width:48px;height:48px}
+@media (max-width:900px) and (orientation:landscape){
+ body.controller-mode header{height:40px;padding:3px 7px}
+ body.controller-mode header .header-line{gap:6px}
+ body.controller-mode h1{font-size:12px}
+ body.controller-mode .phone-battery{font-size:9px;padding:3px 5px}
+ body.controller-mode .view-selector button{min-height:26px;padding:3px 6px;font-size:9px}
+ body.controller-mode main{height:calc(100dvh - 40px);padding:4px;gap:4px;grid-template-columns:minmax(120px,.9fr) minmax(130px,1fr) minmax(135px,1fr);grid-template-rows:minmax(75px,.55fr) minmax(100px,1fr) minmax(65px,.55fr) minmax(55px,.4fr)}
+ body.controller-mode .card{padding:5px}
+ body.controller-mode h2{font-size:10px;margin-bottom:3px}
+ body.controller-mode button{min-height:27px;padding:3px;font-size:9px}
+ body.controller-mode section:nth-child(2){grid-row:1 / span 3}
+ body.controller-mode #joystick{width:min(26vw,39vh,175px);height:min(26vw,39vh,175px);margin:4px auto}
+ body.controller-mode #stick{width:38px;height:38px}
+ body.controller-mode section:nth-child(4) .scene3d{min-height:60px}
+ body.controller-mode section:nth-child(3) .mode-button{min-height:32px}
+ body.controller-mode #log{font-size:8px}
+}
+@media (max-width:600px) and (orientation:portrait){
+ body.controller-mode{height:auto;min-height:100dvh;overflow:auto}
+ body.controller-mode header{height:auto;padding:8px}
+ body.controller-mode header .header-line{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px}
+ body.controller-mode h1{font-size:15px}
+ body.controller-mode .phone-battery{font-size:10px}
+ body.controller-mode main{height:auto;overflow:visible;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto;gap:7px;padding:7px}
+ body.controller-mode section:nth-child(1){grid-column:1;grid-row:1}
+ body.controller-mode section:nth-child(2){grid-column:2;grid-row:1 / span 2;display:flex;justify-content:center}
+ body.controller-mode section:nth-child(3){grid-column:2;grid-row:3;display:block}
+ body.controller-mode section:nth-child(4){grid-column:1;grid-row:2;display:block!important}
+ body.controller-mode section:nth-child(5){grid-column:1 / -1;grid-row:5;display:block}
+ body.controller-mode section:nth-child(6){grid-column:2;grid-row:4;display:block}
+ body.controller-mode section:nth-child(7){grid-column:1;grid-row:3 / span 2;display:block!important}
+ body.controller-mode #joystick{width:min(42vw,190px);height:min(42vw,190px);margin:8px auto}
+ body.controller-mode #stick{width:44px;height:44px}
+ body.controller-mode section:nth-child(3) .row{flex-direction:column;gap:5px}
+ body.controller-mode section:nth-child(3) .mode-button{min-height:38px}
+ body.controller-mode section:nth-child(4) .scene3d{height:170px;min-height:150px}
+ body.controller-mode section:nth-child(7) #log{height:110px;min-height:90px}
+ body.controller-mode .note{display:block}
+}
 </style>
 </head>
 <body>
-<header><h1>mBot Simple Control</h1></header>
+<header>
+  <div class="header-line">
+    <h1>mBot Simple Control</h1>
+    <div class="phone-battery" id="phoneBattery" aria-live="polite">🔋 Téléphone : --%</div>
+    <div class="view-selector" role="group" aria-label="Disposition du site">
+      <button type="button" id="classicView" class="primary">Classique</button>
+      <button type="button" id="controllerView">Manette paysage</button>
+    </div>
+  </div>
+</header>
 
 <main>
   <section class="card">
@@ -192,11 +396,17 @@ function setStatus(message, state = "") {
   $("dot").className = "dot" + (state ? " " + state : "");
 }
 
+function centerJoystickStick() {
+  const x = (joy.clientWidth - stick.offsetWidth) / 2;
+  const y = (joy.clientHeight - stick.offsetHeight) / 2;
+  stick.style.left = x + "px";
+  stick.style.top = y + "px";
+}
+
 function resetJoystick() {
   active = false;
   activeCmd = "0";
-  $("stick").style.left = "98px";
-  $("stick").style.top = "98px";
+  centerJoystickStick();
   $("readout").textContent = "Relâché — Stop";
 }
 
@@ -439,15 +649,17 @@ function handleMove(event) {
   let dx = event.clientX - cx;
   let dy = event.clientY - cy;
   const distance = Math.hypot(dx, dy);
-  const maxR = 90;
+  const maxR = Math.max(10, Math.min(90, (joy.clientWidth - stick.offsetWidth) / 2 - 4));
 
   if (distance > maxR) {
     dx = dx / distance * maxR;
     dy = dy / distance * maxR;
   }
 
-  stick.style.left = (98 + dx) + "px";
-  stick.style.top = (98 + dy) + "px";
+  const centerX = (joy.clientWidth - stick.offsetWidth) / 2;
+  const centerY = (joy.clientHeight - stick.offsetHeight) / 2;
+  stick.style.left = (centerX + dx) + "px";
+  stick.style.top = (centerY + dy) + "px";
 
   if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
     setJoystickCommand("0", "Centre — Stop");
@@ -464,8 +676,7 @@ function releaseJoystick() {
   if (!active) return;
   active = false;
   activeCmd = "0";
-  stick.style.left = "98px";
-  stick.style.top = "98px";
+  centerJoystickStick();
   $("readout").textContent = "Arrêt";
   sendCmd("0", true);
 }
@@ -546,6 +757,46 @@ window.addEventListener("blur", releaseJoystick);
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) releaseJoystick();
 });
+
+const classicViewButton = $("classicView");
+const controllerViewButton = $("controllerView");
+function setViewMode(controller) {
+  document.body.classList.toggle("controller-mode", controller);
+  classicViewButton.classList.toggle("active-view", !controller);
+  controllerViewButton.classList.toggle("active-view", controller);
+  if (controller) {
+    // Recentrer le joystick après le changement de taille du panneau.
+    requestAnimationFrame(centerJoystickStick);
+    log("Disposition manette paysage activée.");
+  } else {
+    requestAnimationFrame(centerJoystickStick);
+    log("Disposition classique activée.");
+  }
+}
+classicViewButton.addEventListener("click", () => setViewMode(false));
+controllerViewButton.addEventListener("click", () => setViewMode(true));
+setViewMode(false);
+
+// Niveau de batterie du téléphone si le navigateur expose cette API.
+// Safari/iOS ne la fournit pas toujours : on affiche alors une indication honnête.
+(async function updatePhoneBattery(){
+  const badge = $("phoneBattery");
+  if (!badge) return;
+  if (navigator.getBattery) {
+    try {
+      const battery = await navigator.getBattery();
+      const paint = () => {
+        const pct = Math.round(battery.level * 100);
+        badge.textContent = (battery.charging ? "⚡ " : "🔋 ") + "Téléphone : " + pct + "%";
+      };
+      paint();
+      battery.addEventListener("levelchange", paint);
+      battery.addEventListener("chargingchange", paint);
+      return;
+    } catch (_) {}
+  }
+  badge.textContent = "📱 Batterie : non disponible";
+})();
 </script>
 </body>
 </html>
