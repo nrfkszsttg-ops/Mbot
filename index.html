@@ -55,6 +55,17 @@ button:disabled { opacity:.45; }
 .power-meter { height:10px; background:#050912; border:1px solid var(--border); border-radius:999px; overflow:hidden; margin-top:8px; }
 #powerFill { height:100%; width:70%; background:linear-gradient(90deg,#3ce0a0,#62b0ff); border-radius:999px; transition:width .08s linear; }
 
+.scene3d{position:relative;height:250px;overflow:hidden;border:1px solid var(--border);border-radius:12px;background:radial-gradient(ellipse at 50% 35%,#172c40,#080d15 75%);perspective:650px;margin-top:10px}
+.floor3d{position:absolute;left:-25%;top:34%;width:150%;height:130%;transform:rotateX(62deg);transform-origin:top center;background-image:linear-gradient(#31516b66 1px,transparent 1px),linear-gradient(90deg,#31516b66 1px,transparent 1px);background-size:28px 28px}
+.sensor3d{position:absolute;left:7%;top:43%;width:58px;height:40px;border:2px solid #91a8bc;border-radius:9px;background:linear-gradient(145deg,#667b8e,#29394a);display:flex;align-items:center;justify-content:space-evenly;z-index:3;box-shadow:0 5px 12px #0008}
+.sensor3d span{width:17px;height:17px;border:3px solid #42d9ff;border-radius:50%;background:#101c28;box-shadow:0 0 8px #42d9ff66}
+#beam3d{position:absolute;left:17%;top:35%;width:65%;height:105px;background:linear-gradient(90deg,#36d9ff55,#36d9ff08);clip-path:polygon(0 40%,100% 0,100% 100%,0 60%);transform:skewY(-4deg);transition:width .2s ease;z-index:1}
+#obstacle3d{position:absolute;left:72%;top:35%;width:30px;height:76px;border:1px solid #ffbd86;border-radius:4px;background:linear-gradient(90deg,#ff9b47,#d95036);box-shadow:0 0 18px #ff783855;transform:rotateY(-12deg);transition:left .25s ease;z-index:2}
+.sceneLabel{position:absolute;right:10px;top:10px;font-size:11px;color:var(--muted);z-index:4}
+#distance{font-size:13px;color:var(--green);font-weight:700;margin-top:10px}
+input[type="text"]{width:100%;min-width:0;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font:inherit}
+input[type="color"]{width:60px;height:45px;padding:3px;border:1px solid var(--border);border-radius:10px;background:var(--panel2)}
+.mode-button.selected{outline:2px solid var(--blue);background:#183756}
 #log {
   background:#050912; border:1px solid var(--border); border-radius:8px;
   padding:8px; height:110px; overflow:auto; overflow-wrap:anywhere;
@@ -97,11 +108,42 @@ button:disabled { opacity:.45; }
   </section>
 
   <section class="card">
-    <h2>Actions rapides</h2>
+    <h2>Modes de conduite</h2>
+    <div class="row">
+      <button id="modeManual" class="mode-button selected">Manuel</button>
+      <button id="modeAdventure" class="mode-button">Aventurier</button>
+      <button id="modeFollow" class="mode-button">Me suivre</button>
+    </div>
+    <p class="note">Manuel : joystick. Aventurier : évite les obstacles automatiquement. Me suivre : avance/recul selon la distance détectée devant lui. Avec un seul capteur avant, le suivi fonctionne uniquement si la personne reste devant le robot. Teste à faible puissance dans un espace dégagé.</p>
     <div class="row">
       <button id="btnBuzzer">Buzzer</button>
-      <button id="btnLed">Matrice LED</button>
+      <button id="btnLed">Afficher puissance</button>
     </div>
+  </section>
+
+  <section class="card">
+    <h2>Visualisation 3D — ultrason PORT_1</h2>
+    <p class="note">L'obstacle est placé selon la distance réellement reçue du robot, si le Bluetooth permet les notifications.</p>
+    <div class="scene3d" aria-label="Visualisation 3D du capteur ultrasonique">
+      <div class="sceneLabel">VUE 3D</div><div class="floor3d"></div><div id="beam3d"></div><div id="obstacle3d"></div>
+      <div class="sensor3d"><span></span><span></span></div>
+    </div>
+    <div id="distance">Distance : en attente du robot…</div>
+  </section>
+
+  <section class="card">
+    <h2>Matrice LED — texte défilant (PORT_4)</h2>
+    <input id="ledText" type="text" maxlength="48" value="BONJOUR" placeholder="Écris ton texte ici">
+    <button id="sendText" class="primary" style="margin-top:8px;width:100%">Afficher le texte</button>
+    <p class="note">Matrice LED Makeblock sur le port 4 (PORT_4).</p>
+  </section>
+
+  <section class="card">
+    <h2>Contrôle des LED RGB</h2>
+    <div class="row" style="align-items:center">
+      <label for="ledColor" style="align-self:center">Couleur</label><input id="ledColor" type="color" value="#00aaff"><button id="sendColor" class="primary">Appliquer</button><button id="ledOff">Éteindre</button>
+    </div>
+    <p class="note">Contrôle les LED RGB du mBot via la bibliothèque Makeblock. Le port exact peut dépendre de la version du mBot.</p>
   </section>
 
   <section class="card">
@@ -118,6 +160,10 @@ const $ = id => document.getElementById(id);
 
 let device = null;
 let tx = null;
+let rx = null;
+let rxBuffer = "";
+let sonarDistance = null;
+let currentMode = "M";
 let connected = false;
 let active = false;
 let activeCmd = "0";
@@ -230,6 +276,67 @@ async function findWritableCharacteristic(server) {
   return null;
 }
 
+async function setupReceive(server) {
+  rx = null;
+  try {
+    const services = await server.getPrimaryServices();
+    for (const service of services) {
+      let chars = [];
+      try { chars = await service.getCharacteristics(); } catch (_) { continue; }
+      const candidate = chars.find(c => c.properties.notify || c.properties.indicate);
+      if (candidate) {
+        rx = candidate;
+        await rx.startNotifications();
+        rx.addEventListener("characteristicvaluechanged", handleIncoming);
+        log("Réception capteur activée : " + rx.uuid);
+        return;
+      }
+    }
+    log("Aucune notification BLE détectée : le contrôle manuel reste disponible, mais la distance 3D ne pourra pas se mettre à jour.");
+  } catch (e) {
+    log("Réception capteur indisponible : " + e.message);
+  }
+}
+
+function handleIncoming(event) {
+  const value = event.target.value;
+  let chunk = "";
+  for (let i = 0; i < value.byteLength; i++) chunk += String.fromCharCode(value.getUint8(i));
+  processIncoming(chunk);
+}
+
+function processIncoming(text) {
+  rxBuffer += text;
+  if (rxBuffer.length > 512) rxBuffer = rxBuffer.slice(-512);
+  let idx;
+  while ((idx = rxBuffer.indexOf("\n")) !== -1) {
+    const line = rxBuffer.slice(0, idx).replace(/\r/g, "").trim();
+    rxBuffer = rxBuffer.slice(idx + 1);
+    const match = line.match(/^D:([0-9]+(?:\.[0-9]+)?)$/);
+    if (match) updateDistance(Number(match[1]));
+    else if (line) log("Robot : " + line);
+  }
+}
+
+function updateDistance(cm) {
+  if (!Number.isFinite(cm) || cm < 0 || cm > 500) return;
+  sonarDistance = cm;
+  $("distance").textContent = "Distance mesurée : " + cm.toFixed(1) + " cm";
+  const pos = 20 + (Math.max(0, Math.min(cm, 200)) / 200) * 68;
+  $("obstacle3d").style.left = pos + "%";
+  $("beam3d").style.width = Math.max(8, pos - 17) + "%";
+  }
+
+function selectMode(mode) {
+  currentMode = mode;
+  ["modeManual", "modeAdventure", "modeFollow"].forEach(id => $(id).classList.remove("selected"));
+  const selected = mode === "M" ? "modeManual" : mode === "A" ? "modeAdventure" : "modeFollow";
+  $(selected).classList.add("selected");
+  resetJoystick();
+  if (connected) sendCmd("M:" + mode + "\n", true);
+  log("Mode sélectionné : " + (mode === "M" ? "manuel" : mode === "A" ? "aventurier" : "me suivre"));
+}
+
 async function connectRobot() {
   if (!("bluetooth" in navigator)) {
     log("Web Bluetooth indisponible. Essaie Chrome ou Edge sur une page HTTPS.");
@@ -259,6 +366,9 @@ async function connectRobot() {
       );
     }
 
+    // Réception facultative : ajoutée sans changer la recherche de la caractéristique d'envoi.
+    await setupReceive(server);
+
     connected = true;
     lastSentCmd = "";
     $("disconnect").disabled = false;
@@ -279,6 +389,8 @@ async function connectRobot() {
 function onDisconnected() {
   connected = false;
   tx = null;
+  rx = null;
+  rxBuffer = "";
   writeBusy = false;
   lastSentCmd = "";
   resetJoystick();
@@ -363,6 +475,10 @@ joy.addEventListener("pointerdown", event => {
     log("Connecte le robot avant d'utiliser le joystick.");
     return;
   }
+  if (currentMode !== "M") {
+    log("Passe en mode Manuel pour utiliser le joystick.");
+    return;
+  }
   active = true;
   joy.setPointerCapture(event.pointerId);
   handleMove(event);
@@ -389,6 +505,23 @@ setInterval(() => {
 
 $("btnBuzzer").addEventListener("click", () => sendCmd("5", true));
 $("btnLed").addEventListener("click", () => sendCmd("6", true));
+
+$("modeManual").addEventListener("click", () => selectMode("M"));
+$("modeAdventure").addEventListener("click", () => selectMode("A"));
+$("modeFollow").addEventListener("click", () => selectMode("F"));
+
+$("sendText").addEventListener("click", () => {
+  const text = $("ledText").value.replace(/[\r\n]/g, " ").trim().slice(0, 48);
+  if (!text) { log("Écris un texte avant de l'envoyer."); return; }
+  sendCmd("T:" + text + "\n", true);
+});
+
+function sendLedColor(hex) {
+  const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+  sendCmd("C:" + r + "," + g + "," + b + "\n", true);
+}
+$("sendColor").addEventListener("click", () => sendLedColor($("ledColor").value));
+$("ledOff").addEventListener("click", () => sendCmd("C:0,0,0\n", true));
 
 // Barre de puissance : commande ajoutée, sans modifier la connexion Bluetooth.
 const powerSlider = $("power");
